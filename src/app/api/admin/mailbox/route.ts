@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
+import { createAdminClient } from '@/lib/supabase/server';
 
 // 邮箱账户配置接口
 interface MailboxAccount {
@@ -63,7 +64,7 @@ export async function GET() {
   }
 }
 
-// 获取指定账户的邮件列表
+// Fetch emails for specific account
 export async function POST(request: Request) {
   try {
     const session = await auth();
@@ -76,14 +77,6 @@ export async function POST(request: Request) {
 
     const { accountId, type = 'sent' } = await request.json();
 
-    const resendApiKey = process.env.RESEND_API_KEY;
-    if (!resendApiKey) {
-      return NextResponse.json(
-        { error: 'RESEND_API_KEY not configured' },
-        { status: 500 }
-      );
-    }
-
     const account = mailboxAccounts.find(acc => acc.id === accountId);
     if (!account) {
       return NextResponse.json(
@@ -92,42 +85,86 @@ export async function POST(request: Request) {
       );
     }
 
-    // 根据类型获取邮件
-    const apiUrl = 'https://api.resend.com/emails';
-    
-    // Resend API 参数
-    // 注意：Resend 主要用于发送邮件，接收邮件需要使用 webhooks
-    // 这里我们先实现发送邮件的查询
-    const response = await fetch(apiUrl, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${resendApiKey}`,
-        'Content-Type': 'application/json',
-      },
-    });
+    let emails = [];
 
-    if (!response.ok) {
-      const error = await response.text();
-      console.error('Resend API error:', error);
-      return NextResponse.json(
-        { error: 'Failed to fetch emails from Resend' },
-        { status: response.status }
-      );
+    if (type === 'received') {
+      // Get received emails from webhook events table
+      const supabase = await createAdminClient();
+      
+      const { data: webhookEvents, error } = await supabase
+        .from('resend_webhook_events')
+        .select('*')
+        .or(`from_email.eq.${account.email},to_emails.cs.{${account.email}}`)
+        .eq('event_type', 'email.received')
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+      if (error) {
+        console.error('Failed to fetch received emails:', error);
+        return NextResponse.json(
+          { error: 'Failed to fetch received emails from database' },
+          { status: 500 }
+        );
+      }
+
+      // Transform webhook events to email format
+      emails = webhookEvents?.map((event: {
+        email_id: string;
+        from_email: string;
+        to_emails: string[];
+        subject: string;
+        created_at: string;
+        event_data?: { html?: string };
+      }) => ({
+        id: event.email_id,
+        from: event.from_email,
+        to: event.to_emails,
+        subject: event.subject || '(No subject)',
+        created_at: event.created_at,
+        last_event: 'received',
+        html: event.event_data?.html,
+      })) || [];
+
+    } else {
+      // Get sent emails from Resend API
+      const resendApiKey = process.env.RESEND_API_KEY;
+      if (!resendApiKey) {
+        return NextResponse.json(
+          { error: 'RESEND_API_KEY not configured' },
+          { status: 500 }
+        );
+      }
+
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${resendApiKey}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        console.error('Resend API error:', error);
+        return NextResponse.json(
+          { error: 'Failed to fetch emails from Resend' },
+          { status: response.status }
+        );
+      }
+
+      const data = await response.json();
+
+      // Filter sent emails for specific account
+      emails = data.data?.filter((email: { from: string; to?: string[] }) => {
+        return email.from === account.email || 
+               email.from?.includes(account.email);
+      }) || [];
     }
-
-    const data = await response.json();
-
-    // Filter emails for specific account
-    const filteredEmails = data.data?.filter((email: { from: string; to?: string[] }) => {
-      return email.from === account.email || 
-             email.from?.includes(account.email) ||
-             email.to?.includes(account.email);
-    }) || [];
 
     return NextResponse.json({
       success: true,
       account,
-      emails: filteredEmails,
+      emails,
       type,
     });
   } catch (error) {
