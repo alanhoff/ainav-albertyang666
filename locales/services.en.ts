@@ -369,6 +369,11 @@ const enServices = {
     description: 'A 100% hidden interview copilot that helps you crack live interviews in real time with AI-powered suggestions, code snippets, and contextual insights',
     tags: ['Interview Assistant', 'Career Tools', 'AI Copilot'],
   },
+  medally: {
+    name: 'MedAlly',
+    description: 'AI-powered clinical assistant that automates documentation, supports structured diagnostic reasoning, and optimizes healthcare workflows with real-time clinical insights',
+    tags: ['AI Healthcare', 'Medical AI', 'Clinical Decision Support'],
+  },
 };
 
 export default enServices;

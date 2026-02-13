@@ -590,5 +590,13 @@
     "featured": false,
     "pricing": "freemium",
     "language": ["en"]
+  },
+  {
+    "id": "medally",
+    "url": "https://www.medally.ai/",
+    "category": "productivity",
+    "featured": false,
+    "pricing": "freemium",
+    "language": ["en"]
   }
 ]

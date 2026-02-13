@@ -121,6 +121,7 @@ const jaServices = {
   kapwing: { name: 'Kapwing', description: 'オンライン動画編集とAIツール', tags: ['動画編集', '字幕'] },
   'fast-image-ai': { name: 'Fast Image AI', description: '写真を人気のあるアートスタイルに素早く変換', tags: ['画像変換', 'スタイル転送'] },
   'lockedin-ai': { name: 'LockedIn AI', description: '100%非表示の面接アシスタント。リアルタイムでAI駆動の提案、コードスニペット、文脈に応じた洞察を提供', tags: ['面接アシスタント', 'キャリアツール', 'AIコパイロット'] },
+  medally: { name: 'MedAlly', description: 'AI搭載の臨床アシスタント。文書化の自動化、構造化された診断推論のサポート、医療ワークフローの最適化をリアルタイムの臨床知見で実現', tags: ['AI医療', '医療AI', '臨床意思決定支援'] },
 };
 
 export default jaServices;

@@ -121,6 +121,7 @@ const frServices = {
   kapwing: { name: 'Kapwing', description: 'Édition vidéo en ligne et outils IA', tags: ['Édition vidéo', 'Sous-titres'] },
   'fast-image-ai': { name: 'Fast Image AI', description: 'Transformez instantanément des photos en œuvres d\'art dans des styles populaires', tags: ['Transformation d\'image', 'Transfert de style'] },
   'lockedin-ai': { name: 'LockedIn AI', description: 'Assistant d\'entretien 100% caché qui vous aide à réussir en temps réel avec des suggestions IA, des extraits de code et des insights contextuels', tags: ['Assistant entretien', 'Outils carrière', 'Copilote IA'] },
+  medally: { name: 'MedAlly', description: 'Assistant clinique alimenté par l\'IA qui automatise la documentation, soutient le raisonnement diagnostique structuré et optimise les flux de travail de santé avec des informations cliniques en temps réel', tags: ['IA santé', 'IA médicale', 'Aide à la décision clinique'] },
 };
 
 export default frServices;
