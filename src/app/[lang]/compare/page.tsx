@@ -123,9 +123,8 @@ export default async function ComparePage({ params, searchParams }: ComparePageP
   const selectedIds = ids ? ids.split(',').filter(Boolean) : [];
   
   // Get tool data for each selected ID
-  const tools = selectedIds
-    .map((id) => getAIServiceById(id, lang))
-    .filter((tool): tool is NonNullable<typeof tool> => tool !== null);
+  const toolResults = await Promise.all(selectedIds.map((id) => getAIServiceById(id, lang)));
+  const tools = toolResults.filter((tool): tool is NonNullable<typeof tool> => tool !== undefined);
 
   if (tools.length === 0) {
     return (

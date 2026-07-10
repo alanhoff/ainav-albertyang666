@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { revalidateTag } from 'next/cache';
 
-// 获取提交列表
+// Fetch submission list
 export async function GET(request: NextRequest) {
   try {
     const supabase = getSupabaseAdmin();
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// 更新提交状态
+// Update submission status
 export async function PATCH(request: NextRequest) {
   try {
     const supabase = getSupabaseAdmin();
@@ -53,14 +54,17 @@ export async function PATCH(request: NextRequest) {
 
     const newStatus = action === 'approve' ? 'approved' : 'rejected';
 
-    const { error } = await supabase
+    // 1. Update submission status
+    const { data: submission, error } = await supabase
       .from('service_submissions')
       .update({
         status: newStatus,
         reviewed_at: new Date().toISOString(),
         review_note: note || null,
       })
-      .eq('id', id);
+      .eq('id', id)
+      .select('*')
+      .single();
 
     if (error) {
       console.error('Supabase error:', error);
@@ -68,6 +72,56 @@ export async function PATCH(request: NextRequest) {
         { error: 'Failed to update submission' },
         { status: 500 }
       );
+    }
+
+    // 2. On approval: write tool to the tools table and trigger on-demand ISR
+    if (action === 'approve' && submission) {
+      // Derive a URL-safe ID from the tool name
+      const toolId = submission.name
+        .toLowerCase()
+        .replace(/[^a-z0-9\u4e00-\u9fff]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+
+      // Build translations JSONB.
+      // The submission contains a single text; seed all 5 locales with the same
+      // content so the tool is usable immediately. Admins can refine per-locale
+      // translations later via the Services admin page.
+      const tags = submission.tags
+        ? submission.tags.split(',').map((t: string) => t.trim()).filter(Boolean)
+        : [];
+      const baseTranslation = {
+        name: submission.name,
+        description: submission.description,
+        tags,
+      };
+      const translations = {
+        zh: baseTranslation,
+        en: baseTranslation,
+        ja: baseTranslation,
+        ko: baseTranslation,
+        fr: baseTranslation,
+      };
+
+      const { error: insertError } = await supabase
+        .from('tools')
+        .upsert({
+          id: toolId,
+          url: submission.url,
+          category: submission.category,
+          featured: false,
+          pricing: submission.pricing || 'freemium',
+          language: [],
+          translations,
+          status: 'active',
+        }, { onConflict: 'id' });
+
+      if (insertError) {
+        console.error('Failed to insert tool to tools table:', insertError);
+        // Does not block the submission status update — continue on error
+      } else {
+        // 3. Trigger on-demand ISR: invalidate all tool-related page caches
+        revalidateTag('tools', {});
+      }
     }
 
     return NextResponse.json({ success: true, status: newStatus });

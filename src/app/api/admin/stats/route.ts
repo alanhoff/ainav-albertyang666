@@ -7,7 +7,7 @@ export async function GET() {
     const supabase = getSupabaseAdmin();
     
     // 获取服务总数
-    const services = getAllAIServices();
+    const services = await getAllAIServices();
     const totalServices = services.length;
     
     // 获取评论统计

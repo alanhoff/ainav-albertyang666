@@ -33,11 +33,11 @@ export async function POST(request: NextRequest) {
     let tools;
     if (toolIds && Array.isArray(toolIds) && toolIds.length > 0) {
       // 如果指定了工具ID，获取这些工具
-      const allTools = getFeaturedAIServices('zh');
+      const allTools = await getFeaturedAIServices('zh');
       tools = allTools.filter(tool => toolIds.includes(tool.id)).slice(0, 5);
     } else {
       // 否则使用精选工具
-      tools = getFeaturedAIServices('zh').slice(0, 5);
+      tools = (await getFeaturedAIServices('zh')).slice(0, 5);
     }
 
     if (tools.length === 0) {

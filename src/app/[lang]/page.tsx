@@ -30,16 +30,18 @@ export default async function Home({ params }: { params: Promise<{ lang: Locale 
   const { lang } = await params;
   const dictionary = getDictionary(lang);
   const categories = getAllCategories(lang);
-  const featuredServices = getFeaturedAIServices(lang);
-  const allServices = getAllAIServices(lang);
-  
-  // 获取所有服务的评分数据
-  const ratingsMap = await getAllRatings();
+  const [featuredServices, allServices, ratingsMap] = await Promise.all([
+    getFeaturedAIServices(lang),
+    getAllAIServices(lang),
+    getAllRatings(),
+  ]);
 
-  const categoryCounts = categories.map((category) => ({
-    ...category,
-    count: getAIServicesByCategory(category.id, lang).length,
-  }));
+  const categoryCounts = await Promise.all(
+    categories.map(async (category) => ({
+      ...category,
+      count: (await getAIServicesByCategory(category.id, lang)).length,
+    }))
+  );
 
   // 生成 JSON-LD 结构化数据
   const websiteSchema = generateWebsiteSchema(lang);

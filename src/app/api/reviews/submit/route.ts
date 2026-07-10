@@ -161,7 +161,7 @@ export async function POST(request: NextRequest) {
 
     // 9. 发送邮件通知管理员
     try {
-      const service = getAIServiceById(service_id, 'zh');
+      const service = await getAIServiceById(service_id, 'zh');
       if (service) {
         await sendReviewModerationEmail({
           serviceName: service.name,

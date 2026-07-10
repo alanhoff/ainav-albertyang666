@@ -1,13 +1,13 @@
 'use client';
 
 import { useBookmark } from '@/lib/bookmark-store';
-import { getAllAIServices } from '@/lib/data';
 import AIServiceCard from '@/components/AIServiceCard';
 import { Locale } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Bookmark } from 'lucide-react';
+import type { AIService } from '@/types';
 
 type RatingData = { average_score: number; review_count: number };
 
@@ -61,7 +61,7 @@ const labels: Record<Locale, {
   },
 };
 
-export default function BookmarksPageClient({ locale }: { locale: Locale }) {
+export default function BookmarksPageClient({ locale, allServices }: { locale: Locale; allServices: AIService[] }) {
   const { bookmarkedIds } = useBookmark();
   const [ratingsMap, setRatingsMap] = useState<Map<string, RatingData>>(new Map());
   const t = labels[locale];
@@ -84,7 +84,6 @@ export default function BookmarksPageClient({ locale }: { locale: Locale }) {
     fetchRatings();
   }, []);
 
-  const allServices = getAllAIServices(locale);
   const bookmarkedServices = allServices.filter(service => 
     bookmarkedIds.includes(service.id)
   );

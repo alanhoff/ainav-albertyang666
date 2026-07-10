@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
   });
 }
 
-export async function generateStaticParams() {
+export function generateStaticParams() {
   const categories = getAllCategories('zh');
   return locales.flatMap((lang) =>
     categories.map((category) => ({
@@ -46,8 +46,10 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     notFound();
   }
 
-  const services = getAIServicesByCategory(id, lang);
-  const ratingsMap = await getAllRatings();
+  const [services, ratingsMap] = await Promise.all([
+    getAIServicesByCategory(id, lang),
+    getAllRatings(),
+  ]);
 
   return (
     <div className="min-h-screen relative">

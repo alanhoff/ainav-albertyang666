@@ -13,13 +13,12 @@ interface ServicePageProps {
 
 export async function generateMetadata({ params }: ServicePageProps): Promise<Metadata> {
   const { lang, serviceId } = await params;
-  const service = getAIServiceById(serviceId, lang);
+  const service = await getAIServiceById(serviceId, lang);
 
   if (!service) {
     return {};
   }
 
-  const rating = await getServiceRating(serviceId);
   const keywords = [
     service.name,
     ...service.tags,
@@ -39,7 +38,7 @@ export async function generateMetadata({ params }: ServicePageProps): Promise<Me
 }
 
 export async function generateStaticParams() {
-  const services = getAllAIServices('zh');
+  const services = await getAllAIServices('zh');
   return locales.flatMap((lang) =>
     services.map((service) => ({
       lang,
@@ -50,14 +49,14 @@ export async function generateStaticParams() {
 
 export default async function ServicePage({ params }: ServicePageProps) {
   const { lang, serviceId } = await params;
-  const service = getAIServiceById(serviceId, lang);
+  const service = await getAIServiceById(serviceId, lang);
 
   if (!service) {
     notFound();
   }
 
   const dictionary = getDictionary(lang);
-  const category = getCategoryById(service.category, lang);
+  const category = getCategoryById(service!.category, lang);
 
   // Generate JSON-LD structured data
   const rating = await getServiceRating(serviceId);

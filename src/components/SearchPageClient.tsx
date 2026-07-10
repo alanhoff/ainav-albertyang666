@@ -2,16 +2,22 @@
 
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useState, useEffect, useMemo } from 'react';
-import { searchAIServices, getAllCategories } from '@/lib/data';
 import AIServiceCard from '@/components/AIServiceCard';
 import SearchBar from '@/components/SearchBar';
 import { getDictionary, Locale } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
+import type { AIService, Category } from '@/types';
 
 type RatingData = { average_score: number; review_count: number };
 type SortOption = 'relevance' | 'rating' | 'reviewCount' | 'nameAsc' | 'nameDesc';
 
-function SearchResults({ locale }: { locale: Locale }) {
+interface SearchResultsProps {
+  locale: Locale;
+  allServices: AIService[];
+  categories: Category[];
+}
+
+function SearchResults({ locale, allServices, categories }: SearchResultsProps) {
   const dictionary = getDictionary(locale);
   const searchParams = useSearchParams();
   const query = searchParams.get('q') || '';
@@ -20,8 +26,6 @@ function SearchResults({ locale }: { locale: Locale }) {
   const [ratingsMap, setRatingsMap] = useState<Map<string, RatingData>>(new Map());
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [sortBy, setSortBy] = useState<SortOption>('relevance');
-  
-  const categories = getAllCategories(locale);
   
   // Fetch ratings data
   useEffect(() => {
@@ -41,10 +45,16 @@ function SearchResults({ locale }: { locale: Locale }) {
     fetchRatings();
   }, []);
 
-  // Filter and sort results
+  // 客户端搜索过滤（基于服务端传入的 allServices）
   const filteredAndSortedResults = useMemo(() => {
-    const searchResults = query ? searchAIServices(query, locale) : [];
-    let results = [...searchResults];
+    const lower = query.toLowerCase();
+    let results = query
+      ? allServices.filter(s =>
+          s.name.toLowerCase().includes(lower) ||
+          s.description.toLowerCase().includes(lower) ||
+          s.tags.some(tag => tag.toLowerCase().includes(lower))
+        )
+      : [];
     
     // Filter by category
     if (selectedCategory !== 'all') {
@@ -72,7 +82,7 @@ function SearchResults({ locale }: { locale: Locale }) {
     });
     
     return results;
-  }, [query, locale, selectedCategory, sortBy, ratingsMap]);
+  }, [query, allServices, selectedCategory, sortBy, ratingsMap]);
 
   return (
     <div className="min-h-screen relative">
@@ -180,7 +190,7 @@ function SearchResults({ locale }: { locale: Locale }) {
   );
 }
 
-export default function SearchPageClient({ locale }: { locale: Locale }) {
+export default function SearchPageClient({ locale, allServices, categories }: { locale: Locale; allServices: AIService[]; categories: Category[] }) {
   return (
     <Suspense
       fallback={
@@ -194,7 +204,7 @@ export default function SearchPageClient({ locale }: { locale: Locale }) {
         </div>
       }
     >
-      <SearchResults locale={locale} />
+      <SearchResults locale={locale} allServices={allServices} categories={categories} />
     </Suspense>
   );
 }

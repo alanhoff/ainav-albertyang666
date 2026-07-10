@@ -1,10 +1,11 @@
 'use client';
 
 import { useCompare, MAX_COMPARE_ITEMS } from '@/lib/compare-store';
-import { getAIServiceById } from '@/lib/data';
 import Link from 'next/link';
 import type { Locale } from '@/lib/i18n';
+import type { AIService } from '@/types';
 import { X, ArrowLeftRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 interface CompareBarProps {
   locale: Locale;
@@ -59,6 +60,20 @@ const labels: Record<
 
 export default function CompareBar({ locale }: CompareBarProps) {
   const { selectedIds, clearCompare, removeFromCompare } = useCompare();
+  const [selectedTools, setSelectedTools] = useState<AIService[]>([]);
+
+  // Fetch tool data from API whenever selected IDs change
+  useEffect(() => {
+    if (selectedIds.length === 0) {
+      // Use functional update to avoid calling setState synchronously
+      Promise.resolve().then(() => setSelectedTools([]));
+      return;
+    }
+    fetch(`/api/tools?ids=${selectedIds.join(',')}&locale=${locale}`)
+      .then(r => r.json())
+      .then(data => setSelectedTools(data.tools || []))
+      .catch(() => setSelectedTools([]));
+  }, [selectedIds, locale]);
 
   if (selectedIds.length === 0) {
     return null;
@@ -66,11 +81,6 @@ export default function CompareBar({ locale }: CompareBarProps) {
 
   const canCompare = selectedIds.length >= 2;
   const t = labels[locale];
-  
-  // Get tool names for display
-  const selectedTools = selectedIds
-    .map((id) => getAIServiceById(id, locale))
-    .filter((tool) => tool !== undefined);
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 border-t-2 border-gray-200 dark:border-gray-700 shadow-2xl animate-slide-up">

@@ -26,10 +26,10 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: Loc
 export default async function AllToolsPage({ params }: { params: Promise<{ lang: Locale }> }) {
   const { lang } = await params;
   const dictionary = getDictionary(lang);
-  const allServices = getAllAIServices(lang);
-  
-  // Get all ratings data
-  const ratingsMap = await getAllRatings();
+  const [allServices, ratingsMap] = await Promise.all([
+    getAllAIServices(lang),
+    getAllRatings(),
+  ]);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">

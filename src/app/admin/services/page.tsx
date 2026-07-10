@@ -9,15 +9,37 @@ import {
   Star, 
   Info,
   Zap, 
-  Coins
+  Coins,
+  Languages,
+  X,
+  Save
 } from 'lucide-react';
 import type { AIService } from '@/types';
+
+const LOCALES = ['zh', 'en', 'ja', 'ko', 'fr'] as const;
+type Locale = typeof LOCALES[number];
+const LOCALE_LABELS: Record<Locale, string> = { zh: '中文', en: 'English', ja: '日本語', ko: '한국어', fr: 'Français' };
+
+interface TranslationForm {
+  name: string;
+  description: string;
+  tags: string; // 逗号分隔
+}
+
+interface EditState {
+  serviceId: string;
+  locale: Locale;
+  form: TranslationForm;
+  saving: boolean;
+}
 
 export default function AdminServicesPage() {
   const [services, setServices] = useState<AIService[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
+  const [editState, setEditState] = useState<EditState | null>(null);
+  const [saveMsg, setSaveMsg] = useState<string | null>(null);
 
   const fetchServices = useCallback(async () => {
     try {
@@ -37,12 +59,57 @@ export default function AdminServicesPage() {
     fetchServices();
   }, [fetchServices]);
 
+  const openEdit = (service: AIService, locale: Locale) => {
+    setEditState({
+      serviceId: service.id,
+      locale,
+      form: {
+        name: service.name || '',
+        description: service.description || '',
+        tags: (service.tags || []).join(', '),
+      },
+      saving: false,
+    });
+    setSaveMsg(null);
+  };
+
+  const saveTranslation = async () => {
+    if (!editState) return;
+    setEditState(prev => prev ? { ...prev, saving: true } : null);
+    try {
+      const res = await fetch('/api/admin/services', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editState.serviceId,
+          locale: editState.locale,
+          name: editState.form.name,
+          description: editState.form.description,
+          tags: editState.form.tags.split(',').map(t => t.trim()).filter(Boolean),
+        }),
+      });
+      if (res.ok) {
+        setSaveMsg('保存成功！页面缓存已刷新。');
+        await fetchServices();
+      } else {
+        const data = await res.json();
+        setSaveMsg(`保存失败：${data.error || '未知错误'}（JSON 工具不支持 DB 写入，仅限审核上线的工具）`);
+      }
+    } catch {
+      setSaveMsg('保存失败，请重试');
+    } finally {
+      setEditState(prev => prev ? { ...prev, saving: false } : null);
+    }
+  };
+
   // 获取所有分类
   const categories = [...new Set(services.map((s) => s.category))];
 
   // 筛选服务
   const filteredServices = services.filter((service) => {
-    const matchesSearch = service.id.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch =
+      service.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      service.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = categoryFilter === 'all' || service.category === categoryFilter;
     return matchesSearch && matchesCategory;
   });
@@ -128,13 +195,13 @@ export default function AdminServicesPage() {
                       </div>
                       <div className="min-w-0">
                         <p className="font-medium text-gray-900 dark:text-white truncate max-w-[180px]">
-                          {service.id}
+                          {service.name || service.id}
                         </p>
                         <a
                           href={service.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 truncate max-w-[180px] block flex items-center gap-1"
+                          className="text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 truncate max-w-[180px] flex items-center gap-1"
                         >
                           <ExternalLink className="w-3 h-3" />
                           {service.url.replace(/^https?:\/\//, '')}
@@ -173,15 +240,38 @@ export default function AdminServicesPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <a
-                      href={service.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
-                      title="访问网站"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                    </a>
+                    <div className="flex items-center justify-end gap-1">
+                      {/* 编辑翻译下拉 */}
+                      <div className="relative group/menu">
+                        <button
+                          className="inline-flex items-center justify-center p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded-lg transition-colors"
+                          title="编辑多语言翻译"
+                        >
+                          <Languages className="w-4 h-4" />
+                        </button>
+                        <div className="absolute right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg py-1 z-10 hidden group-hover/menu:block min-w-[120px]">
+                          {LOCALES.map(locale => (
+                            <button
+                              key={locale}
+                              onClick={() => openEdit(service, locale)}
+                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                            >
+                              <span className="text-xs font-mono bg-gray-100 dark:bg-gray-700 px-1 rounded">{locale}</span>
+                              {LOCALE_LABELS[locale]}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <a
+                        href={service.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
+                        title="访问网站"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -217,20 +307,32 @@ export default function AdminServicesPage() {
                    </div>
                    <div className="min-w-0">
                       <p className="font-medium text-gray-900 dark:text-white truncate">
-                        {service.id}
+                        {service.name || service.id}
                       </p>
                       <a
                         href={service.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-blue-600 dark:text-blue-400 hover:underline truncate block flex items-center gap-1"
+                        className="text-xs text-blue-600 dark:text-blue-400 hover:underline truncate flex items-center gap-1"
                       >
                         <ExternalLink className="w-3 h-3" />
                          访问
                       </a>
                    </div>
                 </div>
-                {service.featured && <Star className="w-5 h-5 text-yellow-500 fill-yellow-500 flex-shrink-0" />}
+                <div className="flex gap-1">
+                  {LOCALES.map(locale => (
+                    <button
+                      key={locale}
+                      onClick={() => openEdit(service, locale)}
+                      className="text-[10px] font-mono px-1.5 py-0.5 bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded border border-purple-200 dark:border-purple-800 hover:bg-purple-100 transition-colors"
+                      title={`编辑${LOCALE_LABELS[locale]}翻译`}
+                    >
+                      {locale}
+                    </button>
+                  ))}
+                  {service.featured && <Star className="w-5 h-5 text-yellow-500 fill-yellow-500 flex-shrink-0 ml-1" />}
+                </div>
               </div>
               
               <div className="flex flex-wrap gap-2 mb-4">
@@ -259,13 +361,94 @@ export default function AdminServicesPage() {
       <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-2xl p-5 flex gap-4">
         <Info className="w-6 h-6 text-blue-600 dark:text-blue-400 flex-shrink-0" />
         <div className="text-sm text-blue-800 dark:text-blue-300">
-          <p className="font-semibold mb-1">数据源管理提示</p>
+          <p className="font-semibold mb-1">多语言翻译说明</p>
           <p className="opacity-90">
-            服务数据目前存储在 <code className="bg-blue-100 dark:bg-blue-900 px-1.5 py-0.5 rounded font-mono text-xs">data/ai-services.json</code> 文件中。
-            要添加或编辑服务，请直接修改该文件，系统会自动重新加载。
+            通过审核上线的工具可点击 <Languages className="w-3.5 h-3.5 inline" /> 图标按语言编辑翻译。
+            JSON 文件中的存量工具需直接修改对应的 <code className="bg-blue-100 dark:bg-blue-900 px-1 rounded font-mono text-xs">locales/services.*.ts</code> 文件。
           </p>
         </div>
       </div>
+
+      {/* 翻译编辑弹窗 */}
+      {editState && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <Languages className="w-5 h-5 text-purple-600" />
+                编辑翻译 —
+                <span className="text-xs font-mono bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded">{editState.locale}</span>
+                {LOCALE_LABELS[editState.locale]}
+              </h2>
+              <button
+                onClick={() => setEditState(null)}
+                className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                工具 ID：<code className="font-mono bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded">{editState.serviceId}</code>
+                <span className="ml-2 text-amber-600 dark:text-amber-400">仅支持写入数据库中的工具</span>
+              </p>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">名称</label>
+                <input
+                  type="text"
+                  value={editState.form.name}
+                  onChange={e => setEditState(prev => prev ? { ...prev, form: { ...prev.form, name: e.target.value } } : null)}
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">描述</label>
+                <textarea
+                  rows={3}
+                  value={editState.form.description}
+                  onChange={e => setEditState(prev => prev ? { ...prev, form: { ...prev.form, description: e.target.value } } : null)}
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">标签（逗号分隔）</label>
+                <input
+                  type="text"
+                  value={editState.form.tags}
+                  onChange={e => setEditState(prev => prev ? { ...prev, form: { ...prev.form, tags: e.target.value } } : null)}
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="标签1, 标签2, 标签3"
+                />
+              </div>
+              {saveMsg && (
+                <p className={`text-sm rounded-lg px-3 py-2 ${saveMsg.includes('成功') ? 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
+                  {saveMsg}
+                </p>
+              )}
+            </div>
+            <div className="flex gap-3 px-6 py-4 border-t border-gray-100 dark:border-gray-700">
+              <button
+                onClick={() => setEditState(null)}
+                className="flex-1 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={saveTranslation}
+                disabled={editState.saving}
+                className="flex-1 px-4 py-2 text-sm text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 rounded-lg transition-colors flex items-center justify-center gap-2"
+              >
+                {editState.saving ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+                保存并刷新缓存
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

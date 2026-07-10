@@ -3,6 +3,7 @@ import { Suspense } from 'react';
 import SearchPageClient from '@/components/SearchPageClient';
 import { generateSEO } from '@/lib/seo';
 import { getDictionary, Locale, locales } from '@/lib/i18n';
+import { getAllAIServices, getAllCategories } from '@/lib/data';
 
 export function generateStaticParams() {
   return locales.map((lang) => ({ lang }));
@@ -22,9 +23,13 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: Loc
 
 export default async function SearchPage({ params }: { params: Promise<{ lang: Locale }> }) {
   const { lang } = await params;
+  const [allServices, categories] = await Promise.all([
+    getAllAIServices(lang),
+    Promise.resolve(getAllCategories(lang)),
+  ]);
   return (
     <Suspense fallback={<div className="container mx-auto px-4 py-16">加载中...</div>}>
-      <SearchPageClient locale={lang} />
+      <SearchPageClient locale={lang} allServices={allServices} categories={categories} />
     </Suspense>
   );
 }

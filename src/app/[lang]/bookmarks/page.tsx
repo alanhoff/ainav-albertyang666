@@ -3,6 +3,7 @@ import { Suspense } from 'react';
 import BookmarksPageClient from '@/components/BookmarksPageClient';
 import { generateSEO } from '@/lib/seo';
 import { getDictionary, Locale, locales } from '@/lib/i18n';
+import { getAllAIServices } from '@/lib/data';
 
 export function generateStaticParams() {
   return locales.map((lang) => ({ lang }));
@@ -22,9 +23,10 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: Loc
 
 export default async function BookmarksPage({ params }: { params: Promise<{ lang: Locale }> }) {
   const { lang } = await params;
+  const allServices = await getAllAIServices(lang);
   return (
     <Suspense fallback={<div className="container mx-auto px-4 py-16">加载中...</div>}>
-      <BookmarksPageClient locale={lang} />
+      <BookmarksPageClient locale={lang} allServices={allServices} />
     </Suspense>
   );
 }

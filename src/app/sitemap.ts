@@ -1,12 +1,13 @@
 import { getAllCategories, getAllAIServices } from '@/lib/data';
 import { locales } from '@/lib/i18n';
 
-export const dynamic = 'force-static';
+// 使用 tags 缓存，revalidateTag('tools') 时自动更新 sitemap
+export const dynamic = 'force-dynamic';
 
-export default function sitemap() {
+export default async function sitemap() {
   const baseUrl = 'https://ainav.space';
   const categories = getAllCategories();
-  const services = getAllAIServices('zh'); // 获取所有服务
+  const services = await getAllAIServices('zh');
 
   // 分类页面
   const categoryUrls = locales.flatMap((locale) =>

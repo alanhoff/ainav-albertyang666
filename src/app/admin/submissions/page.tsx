@@ -72,7 +72,9 @@ export default function AdminSubmissionsPage() {
 
       setMessage({
         type: 'success',
-        text: action === 'approve' ? '已批准提交' : '已拒绝提交',
+        text: action === 'approve'
+          ? '已批准并发布。工具当前使用提交时的原始描述，如需多语言翻译请到「服务管理」页面编辑。'
+          : '已拒绝提交',
       });
       setSubmissions((prev) => prev.filter((s) => s.id !== id));
     } catch {

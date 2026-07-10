@@ -321,3 +321,32 @@ CREATE POLICY "resend_events_select_internal" ON public.resend_webhook_events
   FOR SELECT USING (false);
 CREATE POLICY "resend_events_insert_internal" ON public.resend_webhook_events 
   FOR INSERT WITH CHECK (false);
+
+-- ============================================
+-- 工具表（支持管理员审核后按需 ISR 即时发布）
+-- ============================================
+CREATE TABLE IF NOT EXISTS public.tools (
+  id VARCHAR(255) PRIMARY KEY,
+  url TEXT NOT NULL,
+  category VARCHAR(100) NOT NULL,
+  featured BOOLEAN DEFAULT false,
+  pricing VARCHAR(20) DEFAULT 'freemium' CHECK (pricing IN ('free', 'freemium', 'paid')),
+  language TEXT[] DEFAULT '{}',
+  -- translations 格式: {"zh": {"name":"...", "description":"...", "tags":["..."]}, "en": {...}}
+  translations JSONB DEFAULT '{}',
+  status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_tools_category ON public.tools(category);
+CREATE INDEX IF NOT EXISTS idx_tools_featured ON public.tools(featured) WHERE featured = true;
+CREATE INDEX IF NOT EXISTS idx_tools_status ON public.tools(status);
+
+ALTER TABLE public.tools ENABLE ROW LEVEL SECURITY;
+
+-- 所有人可读 active 工具，仅 service role 可写
+CREATE POLICY "tools_read_active" ON public.tools FOR SELECT USING (status = 'active');
+CREATE POLICY "tools_write_internal" ON public.tools FOR INSERT WITH CHECK (false);
+CREATE POLICY "tools_update_internal" ON public.tools FOR UPDATE USING (false);
+CREATE POLICY "tools_delete_internal" ON public.tools FOR DELETE USING (false);
