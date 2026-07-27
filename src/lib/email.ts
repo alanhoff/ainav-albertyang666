@@ -237,7 +237,7 @@ export async function sendToolApprovedEmail({
   submitterEmail: string;
   note?: string;
 }) {
-  const subject = `🎉 您提交的工具 "${toolName}" 已通过审核！`;
+  const subject = `🎉 Your tool "${toolName}" has been approved!`;
   
   const html = `
     <!DOCTYPE html>
@@ -259,41 +259,41 @@ export async function sendToolApprovedEmail({
       <body>
         <div class="container">
           <div class="header">
-            <h1 style="margin: 0; font-size: 28px;">🎉 恭喜！</h1>
-            <p style="margin: 10px 0 0 0; opacity: 0.9;">您的提交已通过审核</p>
+            <h1 style="margin: 0; font-size: 28px;">🎉 Congratulations!</h1>
+            <p style="margin: 10px 0 0 0; opacity: 0.9;">Your submission has been approved</p>
           </div>
           <div class="content">
             <div class="success-box">
               <div class="emoji">✅</div>
               <h2 style="color: #10b981; margin: 0 0 10px 0;">${toolName}</h2>
-              <p style="color: #6b7280; margin: 15px 0;">您的工具已成功添加到 AI Nav，现已上线！</p>
+              <p style="color: #6b7280; margin: 15px 0;">Your tool has been successfully added to AI Nav and is now live!</p>
             </div>
             
-            <p>尊敬的提交者，</p>
-            <p>感谢您为 AI Nav 社区做出贡献！我们很高兴地通知您，<strong>${toolName}</strong> 已通过审核并成功上线。</p>
+            <p>Dear Submitter,</p>
+            <p>Thank you for contributing to the AI Nav community! We're excited to inform you that <strong>${toolName}</strong> has been reviewed and approved.</p>
             
-            <p>您的工具现在已对成千上万的用户可见，他们可以在我们的平台上发现和使用您的工具。</p>
+            <p>Your tool is now visible to thousands of users exploring AI tools on our platform.</p>
             
             ${note ? `
             <div class="note-box">
-              <p style="margin: 0; color: #1e40af;"><strong>审核备注：</strong></p>
+              <p style="margin: 0; color: #1e40af;"><strong>Review Note:</strong></p>
               <p style="margin: 10px 0 0 0; color: #1e3a8a;">${note}</p>
             </div>
             ` : ''}
             
             <div style="text-align: center; margin-top: 30px;">
               <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://ainav.space'}" class="button">
-                在 AI Nav 上查看
+                View on AI Nav
               </a>
             </div>
             
             <div style="background: #eff6ff; padding: 20px; border-radius: 8px; margin-top: 25px; border-left: 4px solid #3b82f6;">
-              <p style="margin: 0; color: #1e40af;"><strong>💡 小贴士：</strong> 分享您的工具页面到社区，为您的工具带来更多流量！</p>
+              <p style="margin: 0; color: #1e40af;"><strong>💡 Pro Tip:</strong> Share your listing with your community to drive more traffic to your tool!</p>
             </div>
             
             <div class="footer">
-              <p>感谢您帮助我们打造最佳 AI 工具目录！</p>
-              <p>如有任何问题，欢迎随时联系我们。</p>
+              <p>Thank you for helping us build the best AI tools directory!</p>
+              <p>If you have any questions, feel free to reach out.</p>
               <p>© ${new Date().getFullYear()} AI Nav. All rights reserved.</p>
             </div>
           </div>
@@ -303,21 +303,21 @@ export async function sendToolApprovedEmail({
   `;
 
   const text = `
-恭喜！您的工具已通过审核 🎉
+Congratulations! Your Tool Has Been Approved 🎉
 
-尊敬的提交者，
+Dear Submitter,
 
-感谢您为 AI Nav 社区做出贡献！我们很高兴地通知您，"${toolName}" 已通过审核并成功上线。
+Thank you for contributing to the AI Nav community! We're excited to inform you that "${toolName}" has been reviewed and approved.
 
-您的工具现在已对成千上万的用户可见，他们可以在我们的平台上发现和使用您的工具。
+Your tool is now visible to thousands of users exploring AI tools on our platform.
 
-${note ? `审核备注：${note}\n\n` : ''}访问 AI Nav：${process.env.NEXT_PUBLIC_SITE_URL || 'https://ainav.space'}
+${note ? `Review Note: ${note}\n\n` : ''}Visit AI Nav: ${process.env.NEXT_PUBLIC_SITE_URL || 'https://ainav.space'}
 
-💡 小贴士：分享您的工具页面到社区，为您的工具带来更多流量！
+💡 Pro Tip: Share your listing with your community to drive more traffic to your tool!
 
 ---
 
-感谢您帮助我们打造最佳 AI 工具目录！
+Thank you for helping us build the best AI tools directory!
 
 © ${new Date().getFullYear()} AI Nav. All rights reserved.
   `.trim();
@@ -342,7 +342,7 @@ export async function sendToolRejectedEmail({
   submitterEmail: string;
   reason?: string;
 }) {
-  const subject = `关于您提交的工具 "${toolName}" 的审核结果`;
+  const subject = `Review Update: Your submission "${toolName}"`;
   
   const html = `
     <!DOCTYPE html>
@@ -363,47 +363,47 @@ export async function sendToolRejectedEmail({
       <body>
         <div class="container">
           <div class="header">
-            <h1 style="margin: 0; font-size: 28px;">审核结果通知</h1>
-            <p style="margin: 10px 0 0 0; opacity: 0.9;">关于您的工具提交</p>
+            <h1 style="margin: 0; font-size: 28px;">Review Update</h1>
+            <p style="margin: 10px 0 0 0; opacity: 0.9;">About your tool submission</p>
           </div>
           <div class="content">
             <div class="info-box">
               <h2 style="color: #f59e0b; margin: 0 0 10px 0;">${toolName}</h2>
-              <p style="color: #6b7280; margin: 15px 0;">感谢您的提交。经过仔细审核，我们很遗憾地通知您，此次提交未能通过审核。</p>
+              <p style="color: #6b7280; margin: 15px 0;">Thank you for your submission. After careful review, we regret to inform you that this submission was not approved at this time.</p>
             </div>
             
-            <p>尊敬的提交者，</p>
-            <p>感谢您对 AI Nav 平台的关注和支持。我们已仔细审核了您提交的工具 <strong>${toolName}</strong>。</p>
+            <p>Dear Submitter,</p>
+            <p>Thank you for your interest in AI Nav. We have carefully reviewed your submitted tool <strong>${toolName}</strong>.</p>
             
             ${reason ? `
             <div class="reason-box">
-              <p style="margin: 0; color: #92400e;"><strong>未通过原因：</strong></p>
+              <p style="margin: 0; color: #92400e;"><strong>Reason:</strong></p>
               <p style="margin: 10px 0 0 0; color: #78350f;">${reason}</p>
             </div>
             ` : `
-            <p>虽然此次提交未能通过，但我们鼓励您在改进后重新提交。</p>
+            <p>While this submission was not approved, we encourage you to resubmit after making improvements.</p>
             `}
             
             <div style="background: #eff6ff; padding: 20px; border-radius: 8px; margin-top: 25px; border-left: 4px solid #3b82f6;">
-              <p style="margin: 0; color: #1e40af;"><strong>💡 建议：</strong></p>
+              <p style="margin: 0; color: #1e40af;"><strong>💡 Suggestions:</strong></p>
               <ul style="margin: 10px 0 0 0; padding-left: 20px; color: #1e3a8a;">
-                <li>确保工具描述清晰、准确</li>
-                <li>提供正确的工具网址</li>
-                <li>选择合适的分类</li>
-                <li>确保工具质量和实用性</li>
+                <li>Ensure your tool description is clear and accurate</li>
+                <li>Provide the correct tool URL</li>
+                <li>Choose the appropriate category</li>
+                <li>Ensure tool quality and usefulness</li>
               </ul>
             </div>
             
-            <p style="margin-top: 25px;">如果您对审核结果有任何疑问，或在改进后希望重新提交，欢迎随时联系我们。</p>
+            <p style="margin-top: 25px;">If you have any questions about this decision or would like to resubmit after improvements, please feel free to contact us.</p>
             
             <div style="text-align: center; margin-top: 30px;">
               <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://ainav.space'}/submit" class="button">
-                重新提交工具
+                Submit Again
               </a>
             </div>
             
             <div class="footer">
-              <p>感谢您对 AI Nav 的支持！</p>
+              <p>Thank you for your interest in AI Nav!</p>
               <p>© ${new Date().getFullYear()} AI Nav. All rights reserved.</p>
             </div>
           </div>
@@ -413,27 +413,27 @@ export async function sendToolRejectedEmail({
   `;
 
   const text = `
-审核结果通知
+Review Update: Your submission "${toolName}"
 
-尊敬的提交者，
+Dear Submitter,
 
-感谢您对 AI Nav 平台的关注和支持。我们已仔细审核了您提交的工具 "${toolName}"。
+Thank you for your interest in AI Nav. We have carefully reviewed your submitted tool "${toolName}".
 
-很遗憾地通知您，此次提交未能通过审核。
+After careful review, we regret to inform you that this submission was not approved at this time.
 
-${reason ? `未通过原因：\n${reason}\n\n` : ''}建议：
-- 确保工具描述清晰、准确
-- 提供正确的工具网址
-- 选择合适的分类
-- 确保工具质量和实用性
+${reason ? `Reason:\n${reason}\n\n` : ''}Suggestions:
+- Ensure your tool description is clear and accurate
+- Provide the correct tool URL
+- Choose the appropriate category
+- Ensure tool quality and usefulness
 
-如果您对审核结果有任何疑问，或在改进后希望重新提交，欢迎随时联系我们。
+If you have any questions about this decision or would like to resubmit after improvements, please feel free to contact us.
 
-重新提交：${process.env.NEXT_PUBLIC_SITE_URL || 'https://ainav.space'}/submit
+Submit again: ${process.env.NEXT_PUBLIC_SITE_URL || 'https://ainav.space'}/submit
 
 ---
 
-感谢您对 AI Nav 的支持！
+Thank you for your interest in AI Nav!
 
 © ${new Date().getFullYear()} AI Nav. All rights reserved.
   `.trim();
