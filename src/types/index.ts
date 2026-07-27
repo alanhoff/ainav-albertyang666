@@ -10,6 +10,7 @@ export interface AIService {
   pricing?: 'free' | 'freemium' | 'paid';
   language?: string[];
   rating?: ServiceRating;
+  status?: 'active' | 'disabled';
 }
 
 export interface Category {

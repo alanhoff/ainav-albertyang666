@@ -81,6 +81,7 @@ function dbRowToService(row: Record<string, unknown>, locale: Locale): AIService
     name: dbT.name || jsonT?.name || (row.id as string),
     description: dbT.description || jsonT?.description || '',
     tags: dbT.tags || jsonT?.tags || [],
+    status: (row.status as 'active' | 'disabled') || undefined,
   };
 }
 
@@ -100,23 +101,28 @@ async function fetchAndMergeTools(locale: string): Promise<AIService[]> {
     const client = createClient(supabaseUrl, supabaseKey);
     const { data: dbTools, error } = await client
       .from('tools')
-      .select('id, url, category, featured, pricing, language, translations')
-      .eq('status', 'active');
+      .select('id, url, category, featured, pricing, language, translations, status');
 
     if (error || !dbTools || dbTools.length === 0) {
       return jsonTools;
     }
 
-    // Existing JSON tools: if the same ID exists in DB, use DB data (allows metadata updates without code changes)
-    // (dbIdSet removed — use aiServicesBaseData.some() for membership check below)
-    const mergedJsonTools = jsonTools.map(service => {
-      const dbRow = dbTools.find(r => r.id === service.id);
-      return dbRow ? dbRowToService(dbRow as Record<string, unknown>, locale as Locale) : service;
-    });
+    // Existing JSON tools: if the same ID exists in DB, respect DB status.
+    // - If DB row exists and status !== 'active' -> hide the tool (exclude it).
+    // - If DB row exists and status === 'active' -> use DB data to override JSON.
+    const mergedJsonTools = jsonTools
+      .map(service => {
+        const dbRow = dbTools.find(r => r.id === service.id);
+        if (!dbRow) return service;
+        // If DB row is present but not active, remove from final list
+        if ((dbRow.status as string) && (dbRow.status as string) !== 'active') return null;
+        return dbRowToService(dbRow as Record<string, unknown>, locale as Locale);
+      })
+      .filter(Boolean) as AIService[];
 
-    // Tools that exist only in DB (newly approved submissions, not in JSON)
+    // Tools that exist only in DB (newly approved submissions, not in JSON) — only include active ones
     const newDbTools = dbTools
-      .filter(r => !aiServicesBaseData.some(b => b.id === r.id))
+      .filter(r => !aiServicesBaseData.some(b => b.id === r.id) && ((r.status as string) === 'active' || r.status == null))
       .map(r => dbRowToService(r as Record<string, unknown>, locale as Locale));
 
     return [...mergedJsonTools, ...newDbTools];
