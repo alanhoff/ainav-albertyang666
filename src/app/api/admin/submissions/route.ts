@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { revalidateTag } from 'next/cache';
 import { sendToolApprovedEmail, sendToolRejectedEmail } from '@/lib/email';
+import { translateToolContent, createFallbackTranslations } from '@/lib/translate';
 
 // Fetch submission list
 export async function GET(request: NextRequest) {
@@ -83,25 +84,30 @@ export async function PATCH(request: NextRequest) {
         .replace(/[^a-z0-9\u4e00-\u9fff]+/g, '-')
         .replace(/^-+|-+$/g, '');
 
-      // Build translations JSONB.
-      // The submission contains a single text; seed all 5 locales with the same
-      // content so the tool is usable immediately. Admins can refine per-locale
-      // translations later via the Services admin page.
+      // Parse tags
       const tags = submission.tags
         ? submission.tags.split(',').map((t: string) => t.trim()).filter(Boolean)
         : [];
-      const baseTranslation = {
+
+      // Try to translate using DeepSeek AI
+      console.log('Attempting AI translation for:', submission.name);
+      let translations = await translateToolContent({
         name: submission.name,
         description: submission.description,
         tags,
-      };
-      const translations = {
-        zh: baseTranslation,
-        en: baseTranslation,
-        ja: baseTranslation,
-        ko: baseTranslation,
-        fr: baseTranslation,
-      };
+      });
+
+      // Fallback to same-content if translation fails
+      if (!translations) {
+        console.log('AI translation failed, using fallback');
+        translations = createFallbackTranslations({
+          name: submission.name,
+          description: submission.description,
+          tags,
+        });
+      } else {
+        console.log('AI translation successful');
+      }
 
       const { error: insertError } = await supabase
         .from('tools')
