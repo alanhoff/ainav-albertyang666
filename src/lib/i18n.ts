@@ -95,6 +95,7 @@ export type Dictionary = {
     count: (count: number) => string;
     empty: string;
   };
+  categoryIntros: Record<string, string>;
   submit: {
     title: string;
     subtitle: string;

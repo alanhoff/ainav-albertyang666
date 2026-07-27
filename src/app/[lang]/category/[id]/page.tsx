@@ -108,6 +108,15 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
           </div>
         </div>
 
+        {/* 分类导语 */}
+        {dictionary.categoryIntros?.[id] && (
+          <div className="mb-10 p-5 bg-blue-50/60 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 rounded-2xl">
+            <p className="text-base text-gray-700 dark:text-gray-300 leading-relaxed">
+              {dictionary.categoryIntros[id]}
+            </p>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {services.map((service) => (
             <AIServiceCard 
