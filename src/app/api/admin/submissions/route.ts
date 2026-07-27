@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { revalidateTag } from 'next/cache';
+import { sendToolApprovedEmail, sendToolRejectedEmail } from '@/lib/email';
 
 // Fetch submission list
 export async function GET(request: NextRequest) {
@@ -121,6 +122,33 @@ export async function PATCH(request: NextRequest) {
       } else {
         // 3. Trigger on-demand ISR: invalidate all tool-related page caches
         revalidateTag('tools', {});
+      }
+
+      // 4. Send approval email to submitter (if email provided)
+      if (submission.submitter_email) {
+        try {
+          await sendToolApprovedEmail({
+            toolName: submission.name,
+            toolUrl: submission.url,
+            submitterEmail: submission.submitter_email,
+            note: note || undefined,
+          });
+        } catch (emailError) {
+          console.error('Failed to send approval email:', emailError);
+          // Don't block the response if email fails
+        }
+      }
+    } else if (action === 'reject' && submission && submission.submitter_email) {
+      // Send rejection email to submitter
+      try {
+        await sendToolRejectedEmail({
+          toolName: submission.name,
+          submitterEmail: submission.submitter_email,
+          reason: note || undefined,
+        });
+      } catch (emailError) {
+        console.error('Failed to send rejection email:', emailError);
+        // Don't block the response if email fails
       }
     }
 
