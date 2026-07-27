@@ -23,7 +23,7 @@ export async function GET() {
  */
 export async function PATCH(request: NextRequest) {
   try {
-    const { id, locale, name, description, tags } = await request.json();
+    const { id, locale, name, description, tags, status } = await request.json();
 
     if (!id || !locale) {
       return NextResponse.json({ error: 'Missing id or locale' }, { status: 400 });
@@ -48,9 +48,19 @@ export async function PATCH(request: NextRequest) {
       [locale]: { name, description, tags: tags || [] },
     };
 
+    const updates: Record<string, unknown> = {
+      translations: updated,
+      updated_at: new Date().toISOString(),
+    };
+
+    // If status provided, allow toggling active/disabled state
+    if (typeof status === 'string') {
+      updates.status = status;
+    }
+
     const { error: updateError } = await supabase
       .from('tools')
-      .update({ translations: updated, updated_at: new Date().toISOString() })
+      .update(updates)
       .eq('id', id);
 
     if (updateError) {

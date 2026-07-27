@@ -262,6 +262,31 @@ export default function AdminServicesPage() {
                           ))}
                         </div>
                       </div>
+                      <button
+                        onClick={async () => {
+                          try {
+                            const currentStatus = (service as AIService & { status?: string }).status;
+                            const newStatus = currentStatus === 'active' ? 'disabled' : 'active';
+                            const res = await fetch('/api/admin/services', {
+                              method: 'PATCH',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ id: service.id, status: newStatus }),
+                            });
+                            if (res.ok) {
+                              await fetchServices();
+                            } else {
+                              console.error('Failed to toggle status');
+                            }
+                          } catch (err) {
+                            console.error('Toggle status error', err);
+                          }
+                        }}
+                        className={`inline-flex items-center justify-center px-3 py-2 text-sm rounded-lg transition-colors border ${((service as AIService & { status?: string }).status === 'active') ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100' : 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'}`}
+                        title={(service as AIService & { status?: string }).status === 'active' ? '禁用工具' : '启用工具'}
+                      >
+                        {(service as AIService & { status?: string }).status === 'active' ? '禁用' : '启用'}
+                      </button>
+
                       <a
                         href={service.url}
                         target="_blank"
@@ -342,7 +367,7 @@ export default function AdminServicesPage() {
                 <PricingBadge pricing={service.pricing || 'free'} />
               </div>
               
-              <div className="flex flex-wrap gap-1 border-t border-gray-100 dark:border-gray-700 pt-3">
+              <div className="flex flex-wrap gap-1 mb-3">
                  {(service.language || []).map((lang) => (
                   <span
                     key={lang}
@@ -351,6 +376,38 @@ export default function AdminServicesPage() {
                     {lang}
                   </span>
                 ))}
+              </div>
+
+              <div className="flex gap-2 pt-3 border-t border-gray-100 dark:border-gray-700">
+                <button
+                  onClick={async () => {
+                    try {
+                      const currentStatus = (service as AIService & { status?: string }).status;
+                      const newStatus = currentStatus === 'active' ? 'disabled' : 'active';
+                      const res = await fetch('/api/admin/services', {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: service.id, status: newStatus }),
+                      });
+                      if (res.ok) {
+                        await fetchServices();
+                      }
+                    } catch (err) {
+                      console.error('Toggle status error', err);
+                    }
+                  }}
+                  className={`flex-1 inline-flex items-center justify-center px-3 py-2 text-sm rounded-lg transition-colors border ${((service as AIService & { status?: string }).status === 'active') ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800' : 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800'}`}
+                >
+                  {(service as AIService & { status?: string }).status === 'active' ? '禁用' : '启用'}
+                </button>
+                <a
+                  href={service.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center px-3 py-2 text-sm text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors border border-gray-200 dark:border-gray-600"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                </a>
               </div>
             </div>
           ))
