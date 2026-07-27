@@ -19,6 +19,26 @@ export async function generateMetadata({ params }: ServicePageProps): Promise<Me
     return {};
   }
 
+  // 工具页 TDK：{\u5de5具名} - {\u6838心功能\u63cf述小片段} | ainav.space
+  const shortDesc = service.description.length > 50
+    ? service.description.slice(0, 50) + '…'
+    : service.description;
+
+  const pricingLabel: Record<string, string> = {
+    free: lang === 'zh' ? '免费' : 'Free',
+    freemium: lang === 'zh' ? '免费+付费' : 'Freemium',
+    paid: lang === 'zh' ? '付费' : 'Paid',
+  };
+  const pricing = pricingLabel[service.pricing || 'freemium'] || 'Freemium';
+
+  const descTemplates: Record<Locale, string> = {
+    zh: `${service.name}是一款${shortDesc}。支持${(service.tags || []).slice(0, 2).join('、')}等核心功能，提供${pricing}方案，点击可直达官方入口。`,
+    en: `${service.name} is ${shortDesc}. Features: ${(service.tags || []).slice(0, 2).join(', ')}. Pricing: ${pricing}. Click to visit the official site.`,
+    ja: `${service.name}は${shortDesc}。${(service.tags || []).slice(0, 2).join('、')}などの機能を提供。料金プラン：${pricing}。`,
+    ko: `${service.name}는 ${shortDesc}. ${(service.tags || []).slice(0, 2).join(', ')} 등 기능 제공. 가격: ${pricing}.`,
+    fr: `${service.name} est ${shortDesc}. Fonctionnalités: ${(service.tags || []).slice(0, 2).join(', ')}. Tarification: ${pricing}.`,
+  };
+
   const keywords = [
     service.name,
     ...service.tags,
@@ -28,8 +48,8 @@ export async function generateMetadata({ params }: ServicePageProps): Promise<Me
   ];
 
   return generateSEO({
-    title: service.name,
-    description: service.description,
+    title: `${service.name} - ${shortDesc}`,
+    description: descTemplates[lang],
     keywords,
     url: `/${lang}/service/${serviceId}`,
     locale: lang,

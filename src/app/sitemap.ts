@@ -47,19 +47,13 @@ export default async function sitemap() {
       url: `${baseUrl}/${locale}/submit`,
       lastModified: new Date(),
       changeFrequency: 'monthly' as const,
-      priority: 0.6,
+      priority: 0.5,
     },
     {
       url: `${baseUrl}/${locale}/tools`,
       lastModified: new Date(),
       changeFrequency: 'daily' as const,
       priority: 0.85,
-    },
-    {
-      url: `${baseUrl}/${locale}/bookmarks`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 0.5,
     },
   ]);
 

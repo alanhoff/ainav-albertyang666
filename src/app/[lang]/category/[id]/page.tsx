@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import AIServiceCard from '@/components/AIServiceCard';
 import { getAllCategories, getCategoryById, getAIServicesByCategory } from '@/lib/data';
-import { generateSEO } from '@/lib/seo';
+import { generateSEO, generateBreadcrumbSchema, generateItemListSchema } from '@/lib/seo';
 import { getAllRatings } from '@/lib/supabase';
 import type { Metadata } from 'next';
 import { getDictionary, Locale, locales } from '@/lib/i18n';
@@ -12,16 +12,31 @@ interface CategoryPageProps {
 
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
   const { lang, id } = await params;
-  const dictionary = getDictionary(lang);
   const category = getCategoryById(id, lang);
 
   if (!category) {
     return {};
   }
 
+  // 分类页 TDK 模板：{\u5206类名}推荐_免费{\u5206类名}大全
+  const titleTemplates: Record<Locale, string> = {
+    zh: `${category.name}推荐_免费${category.name}工具大全`,
+    en: `Best ${category.name} Tools - Free ${category.name} Software`,
+    ja: `${category.name}おすすめ_無料${category.name}ツール一覧`,
+    ko: `${category.name} 추천_무료 ${category.name} 도구 모음`,
+    fr: `Meilleurs Outils ${category.name} - Logiciels ${category.name} Gratuits`,
+  };
+  const descTemplates: Record<Locale, string> = {
+    zh: `精选多款优质${category.name}，${category.description}。涵盖免费版、付费订阅版，一键直达官方入口使用。`,
+    en: `Discover the best ${category.name} tools. ${category.description}. Free and paid options, direct links to official sites.`,
+    ja: `厳選された${category.name}ツールをご紹介。${category.description}。無料・有料プランあり。`,
+    ko: `엄선된 ${category.name} 도구 모음. ${category.description}. 무료 및 유료 옵션 제공.`,
+    fr: `Découvrez les meilleurs outils ${category.name}. ${category.description}. Options gratuites et payantes.`,
+  };
+
   return generateSEO({
-    title: category.name,
-    description: `${category.description} - ${dictionary.sections.browseCategories}`,
+    title: titleTemplates[lang],
+    description: descTemplates[lang],
     url: `/${lang}/category/${id}`,
     locale: lang,
   });
@@ -51,7 +66,24 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     getAllRatings(),
   ]);
 
+  // Schema.org: ItemList + BreadcrumbList
+  const baseUrl = 'https://ainav.space';
+  const itemListSchema = generateItemListSchema(
+    services.map((s, i) => ({
+      name: s.name,
+      url: `${baseUrl}/${lang}/service/${s.id}`,
+      position: i + 1,
+    }))
+  );
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: dictionary.siteName, url: `${baseUrl}/${lang}` },
+    { name: category.name, url: `${baseUrl}/${lang}/category/${id}` },
+  ]);
+
   return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
     <div className="min-h-screen relative">
       {/* Background Gradient */}
       <div className="absolute top-0 right-0 w-[600px] h-[400px] bg-blue-100 dark:bg-blue-900/10 blur-[100px] rounded-full -z-10 pointer-events-none" />
@@ -96,5 +128,6 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         )}
       </div>
     </div>
+    </>
   );
 }

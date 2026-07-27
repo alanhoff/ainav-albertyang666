@@ -18,10 +18,26 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: Loc
   const { lang } = await params;
   const dictionary = getDictionary(lang);
 
+  // 按语言定制首页 TDK
+  const titleMap: Record<Locale, string> = {
+    zh: 'AI工具导航大全 - 精选好用的AI软件合集',
+    en: 'Best AI Tools Directory - Curated AI Software Collection',
+    ja: 'AIツールナビ - 厳選AIソフトウェア一覧',
+    ko: 'AI 도구 모음 - 엄선된 AI 소프트웨어 컬렉션',
+    fr: 'Annuaire des Meilleurs Outils IA - Collection IA Sélectionnée',
+  };
+  const descMap: Record<Locale, string> = {
+    zh: 'ainav.space 收录各类优质AI工具，覆盖AI写作、AI绘图、AI视频、AI编程等场景，免费与付费工具分类整理，帮你快速找到合适的AI生产力工具。',
+    en: 'ainav.space collects top AI tools covering writing, image, video, coding and more. Free and paid tools organized by category to help you find the right AI productivity tool.',
+    ja: 'ainav.spaceはAIライティング、画像生成、動画、コーディングなど多様なAIツールを厳選して収録。無料・有料ツールをカテゴリ別に整理。',
+    ko: 'ainav.space는 AI 작성, 이미지, 동영상, 코딩 등 다양한 AI 도구를 수록합니다.',
+    fr: "ainav.space recense les meilleurs outils IA couvrant l'écriture, l'image, la vidéo, le code et plus encore.",
+  };
+
   return generateSEO({
     locale: lang,
-    title: dictionary.siteName,
-    description: dictionary.siteDescription,
+    title: titleMap[lang],
+    description: descMap[lang],
     url: `/${lang}`,
   });
 }

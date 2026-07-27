@@ -44,6 +44,8 @@ export function generateSEO({
     fr: 'fr_FR',
   };
 
+  const canonicalUrl = url.startsWith('http') ? url : `${siteConfig.url}${url}`;
+
   return {
     title: fullTitle,
     description: finalDescription,
@@ -53,7 +55,7 @@ export function generateSEO({
     publisher: siteConfig.siteName,
     metadataBase: new URL(siteConfig.url),
     alternates: {
-      canonical: url,
+      canonical: canonicalUrl,
       languages: {
         'zh-CN': `${siteConfig.url}/zh`,
         'en-US': `${siteConfig.url}/en`,
@@ -98,9 +100,6 @@ export function generateSEO({
         'max-image-preview': 'large',
         'max-snippet': -1,
       },
-    },
-    verification: {
-      google: 'your-google-verification-code',
     },
   };
 }
@@ -152,6 +151,21 @@ export function generateBreadcrumbSchema(items: Array<{ name: string; url: strin
   };
 }
 
+export function generateItemListSchema(
+  items: Array<{ name: string; url: string; position: number }>
+) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    itemListElement: items.map((item) => ({
+      '@type': 'ListItem',
+      position: item.position,
+      name: item.name,
+      url: item.url,
+    })),
+  };
+}
+
 export function generateProductSchema({
   name,
   description,
@@ -185,7 +199,9 @@ export function generateProductSchema({
     description,
     url,
     image: image || siteConfig.ogImage,
-    applicationCategory: category,
+    applicationCategory: 'UtilitiesApplication',
+    applicationSubCategory: category,
+    operatingSystem: 'Web',
     offers,
     ...(rating && reviewCount && {
       aggregateRating: {
