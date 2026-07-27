@@ -334,7 +334,7 @@ CREATE TABLE IF NOT EXISTS public.tools (
   language TEXT[] DEFAULT '{}',
   -- translations 格式: {"zh": {"name":"...", "description":"...", "tags":["..."]}, "en": {...}}
   translations JSONB DEFAULT '{}',
-  status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
+  status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'disabled', 'inactive')),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
