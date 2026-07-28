@@ -45,7 +45,7 @@ export async function PATCH(request: NextRequest) {
   try {
     const supabase = getSupabaseAdmin();
     const body = await request.json();
-    const { id, action, note } = body;
+    const { id, action, note, sendEmail } = body;
 
     if (!id || !action) {
       return NextResponse.json(
@@ -130,8 +130,8 @@ export async function PATCH(request: NextRequest) {
         revalidateTag('tools', {});
       }
 
-      // 4. Send approval email to submitter (if email provided)
-      if (submission.submitter_email) {
+      // 4. Send approval email to submitter (if email provided and sendEmail not explicitly false)
+      if (submission.submitter_email && sendEmail !== false) {
         try {
           await sendToolApprovedEmail({
             toolName: submission.name,
