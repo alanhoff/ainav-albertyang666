@@ -2,11 +2,11 @@ import SearchBar from '@/components/SearchBar';
 import AIServiceCard from '@/components/AIServiceCard';
 import CategoryCard from '@/components/CategoryCard';
 import { getAllAIServices, getAllCategories, getFeaturedAIServices, getAIServicesByCategory } from '@/lib/data';
-import { getDictionary, Locale } from '@/lib/i18n';
+import { getDictionary, Locale, locales } from '@/lib/i18n';
 import { generateSEO, generateWebsiteSchema, generateOrganizationSchema } from '@/lib/seo';
 import { getAllRatings } from '@/lib/supabase';
 import type { Metadata } from 'next';
-import { locales } from '@/lib/i18n';
+import { notFound } from 'next/navigation';
 import { Rocket, Wrench, Folder, Star } from 'lucide-react';
 import Link from 'next/link';
 
@@ -14,9 +14,13 @@ export function generateStaticParams() {
   return locales.map((lang) => ({ lang }));
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ lang: Locale }> }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {
   const { lang } = await params;
-  const dictionary = getDictionary(lang);
+  // 验证语言参数，无效语言返回404
+  if (!locales.includes(lang as Locale)) {
+    notFound();
+  }
+  const dictionary = getDictionary(lang as Locale);
 
   // 按语言定制首页 TDK
   const titleMap: Record<Locale, string> = {
@@ -35,15 +39,20 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: Loc
   };
 
   return generateSEO({
-    locale: lang,
-    title: titleMap[lang],
-    description: descMap[lang],
+    locale: lang as Locale,
+    title: titleMap[lang as Locale],
+    description: descMap[lang as Locale],
     url: `/${lang}`,
   });
 }
 
-export default async function Home({ params }: { params: Promise<{ lang: Locale }> }) {
-  const { lang } = await params;
+export default async function Home({ params }: { params: Promise<{ lang: string }> }) {
+  const { lang: langParam } = await params;
+  // 验证语言参数，无效语言返回404
+  if (!locales.includes(langParam as Locale)) {
+    notFound();
+  }
+  const lang = langParam as Locale;
   const dictionary = getDictionary(lang);
   const categories = getAllCategories(lang);
   const [featuredServices, allServices, ratingsMap] = await Promise.all([

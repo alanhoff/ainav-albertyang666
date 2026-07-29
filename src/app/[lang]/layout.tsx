@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { generateSEO } from '@/lib/seo';
 import { getDictionary, Locale, locales } from '@/lib/i18n';
 import LanguageSwitcherWrapper from '@/components/LanguageSwitcherWrapper';
@@ -19,6 +20,10 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {
   const { lang } = await params;
+  // 验证语言参数，无效语言返回404
+  if (!locales.includes(lang as Locale)) {
+    notFound();
+  }
   const dictionary = getDictionary(lang as Locale);
 
   return generateSEO({
@@ -37,6 +42,10 @@ export default async function LangLayout({
   params: Promise<{ lang: string }>;
 }>) {
   const { lang } = await params;
+  // 验证语言参数，无效语言返回404
+  if (!locales.includes(lang as Locale)) {
+    notFound();
+  }
   const dictionary = getDictionary(lang as Locale);
 
   return (
