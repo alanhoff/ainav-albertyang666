@@ -1,6 +1,6 @@
 <div align="center">
   <h1>🚀 AI 导航 - ainav.space</h1>
-  <p><strong>精选全球优质 AI 工具 | 72 AI 服务 | 16 大分类 | 5 种语言</strong></p>
+  <p><strong>精选全球优质 AI 工具 | 518+ AI 服务 | 16 大分类 | 5 种语言</strong></p>
   
   <p>
     <a href="https://ainav.space">🌐 在线访问</a> •
@@ -35,24 +35,25 @@
 
 ### 🎯 为什么选择 AI 导航？
 
-- 🎨 **精选收录** - 72 精选 AI 工具，覆盖 16 大应用场景
+- 🎨 **精选收录** - 518+ 精选 AI 工具，覆盖 16 大应用场景
 - 🔍 **智能搜索** - 快速查找你需要的 AI 工具
 - 🏷️ **分类清晰** - 对话、绘画、视频、编程、音乐等 16 大分类
 - 🌍 **多语言支持** - 支持中文、English、日本語、한국어、Français 五种语言
 - 🌓 **深色模式** - 支持浅色/深色主题切换
 - 📱 **响应式设计** - 完美适配桌面端和移动端
-- ⚡ **极速加载** - 静态网站生成，秒开无等待
+- ⚡ **极速加载** - Turbopack 构建，页面秒开
+- 🤖 **AI 搜索优化** - 内置 llms.txt，适配 AI 搜索引擎
 - 🆓 **完全免费** - 无广告，无需注册
 
 ### 📊 数据统计
 
 | 项目         | 数量 |
 | ------------ | ---- |
-| AI 工具总数  | 72   |
+| AI 工具总数  | 518+ |
 | 分类数量     | 16   |
 | 支持语言     | 5    |
-| 精选推荐     | 11   |
-| 支持中文工具 | 25+  |
+| 精选推荐     | 20+  |
+| 支持中文工具 | 100+ |
 
 ## ✨ 特色功能
 
@@ -74,7 +75,10 @@
 - ✅ **评论系统** - 用户评分和评论（Supabase 存储）
 - ✅ **管理后台** - NextAuth 登录，评论/服务/提交审核
 - ✅ **工具对比** - 最多支持 4 个 AI 工具并排对比
-- ✅ **SEO 优化** - 完善的 SEO 配置，易被搜索引擎收录
+- ✅ **收藏功能** - 收藏并整理你喜欢的 AI 工具
+- ✅ **邮件订阅** - 订阅每周 AI 工具更新邮件
+- ✅ **AI SEO 优化** - sitemap.xml + robots.txt + llms.txt + JSON-LD 结构化数据，适配传统和AI搜索引擎
+- ✅ **404 处理** - 无效路径正确返回404页面，避免500错误
 
 ## 🎯 快速开始
 
@@ -128,12 +132,13 @@ pnpm build
 
 | 技术               | 说明                               |
 | ------------------ | ---------------------------------- |
-| **Next.js 16**     | React 框架，支持 SSG 和 App Router |
+| **Next.js 16**     | React 框架，App Router + Turbopack |
 | **TypeScript 5**   | 类型安全的 JavaScript              |
 | **Tailwind CSS 4** | 实用优先的 CSS 框架                |
-| **React 19**       | 最新的 React 版本                  |
+| **React 19**       | React Compiler 自动优化            |
 | **NextAuth v5**    | 身份认证（GitHub OAuth）           |
 | **Supabase**       | 后端数据库（评论、评分、提交）     |
+| **Resend**         | 邮件服务，用于订阅通知             |
 
 ## 📂 项目结构
 
@@ -142,10 +147,14 @@ ainav/
 ├── src/
 │   ├── app/              # Next.js App Router 页面
 │   │   ├── [lang]/       # 多语言路由（支持 zh/en/ja/ko/fr）
+│   │   │   ├── bookmarks/      # 收藏夹页面
 │   │   │   ├── category/[id]/  # 分类页面
+│   │   │   ├── compare/        # 工具对比页面
 │   │   │   ├── search/         # 搜索页面
+│   │   │   ├── service/[id]/   # 工具详情页
 │   │   │   └── submit/         # 提交页面
 │   │   ├── admin/        # 管理后台
+│   │   │   ├── emails/         # 邮件营销管理
 │   │   │   ├── reviews/        # 评论管理
 │   │   │   ├── services/       # 服务管理
 │   │   │   └── submissions/    # 提交审核
@@ -153,33 +162,26 @@ ainav/
 │   │   │   ├── admin/          # 管理接口
 │   │   │   ├── auth/           # NextAuth 认证
 │   │   │   ├── reviews/        # 评论接口
-│   │   │   └── submit/         # 提交接口
+│   │   │   ├── subscribe/      # 邮件订阅接口
+│   │   │   └── webhooks/       # Resend 邮件回调
 │   │   ├── auth/         # 登录页面
+│   │   ├── llms.txt/     # AI搜索引擎优化 llms.txt
+│   │   ├── llms-full.txt/# 完整内容版 llms.txt
 │   │   ├── layout.tsx    # 全局布局
+│   │   ├── not-found.tsx # 404 页面
 │   │   ├── page.tsx      # 首页重定向
-│   │   ├── sitemap.ts    # 站点地图
+│   │   ├── sitemap.ts    # XML 站点地图
 │   │   └── robots.ts     # robots.txt
 │   ├── components/       # React 组件
-│   │   ├── AIServiceCard.tsx
-│   │   ├── AuthProvider.tsx    # NextAuth Provider
-│   │   ├── CategoryCard.tsx
-│   │   ├── LanguageSwitcher.tsx
-│   │   ├── ReviewSection.tsx   # 评论组件
-│   │   ├── SearchBar.tsx
-│   │   ├── SubmitForm.tsx
-│   │   ├── ThemeToggle.tsx
-│   │   └── UserMenu.tsx        # 用户菜单
 │   ├── lib/              # 工具函数
 │   │   ├── data.ts       # 数据处理
 │   │   ├── i18n.ts       # 国际化配置
 │   │   ├── seo.ts        # SEO配置
 │   │   └── supabase.ts   # Supabase 客户端
 │   └── types/            # TypeScript 类型
-│       ├── index.ts
-│       └── next-auth.d.ts      # NextAuth 类型扩展
-├── locales/              # 多语言翻译文件
+├── locales/              # 5种语言翻译文件
 ├── data/                 # AI工具数据
-├── supabase/             # Supabase Schema
+├── supabase/             # Supabase 数据库结构
 ├── public/               # 静态资源
 └── package.json
 ```
@@ -227,9 +229,13 @@ ainav/
 - [x] 管理后台（NextAuth + Supabase）
 - [x] 在线工具提交系统
 - [x] 添加工具对比功能
-- [ ] 集成用户收藏功能
+- [x] 集成用户收藏功能
+- [x] 邮件订阅功能
+- [x] AI SEO 优化（llms.txt 支持）
+- [x] 修复无效路径500错误，正确返回404
 - [ ] 添加工具更新日志
 - [ ] 开发移动端 App
+- [ ] AI 智能工具推荐
 
 ## ⭐ Star History
 

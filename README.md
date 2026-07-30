@@ -1,6 +1,6 @@
 <div align="center">
   <h1>🚀 AI Directory - ainav.space</h1>
-  <p><strong>Curated AI Tools Directory | 72 AI Services | 16 Categories | 5 Languages</strong></p>
+  <p><strong>Curated AI Tools Directory | 518+ AI Services | 16 Categories | 5 Languages</strong></p>
   
   <p>
     <a href="https://ainav.space">🌐 Live Demo</a> •
@@ -35,24 +35,25 @@
 
 ### 🎯 Why AI Directory?
 
-- 🎨 **Curated Collection** - 72 handpicked AI tools across 16 categories
+- 🎨 **Curated Collection** - 518+ handpicked AI tools across 16 categories
 - 🔍 **Smart Search** - Quickly find the AI tools you need
 - 🏷️ **Clear Categories** - Chat, Image, Video, Coding, Music and more
 - 🌍 **Multi-language** - Supports English, 中文, 日本語, 한국어, Français
 - 🌓 **Dark Mode** - Light/Dark theme switching
 - 📱 **Responsive Design** - Perfect on desktop and mobile
-- ⚡ **Fast Loading** - Static site generation, instant load
+- ⚡ **Fast Loading** - Turbopack build, instant page loads
+- 🤖 **AI SEO Optimized** - Built-in llms.txt for AI search engines
 - 🆓 **Completely Free** - No ads, no registration required
 
 ### 📊 Statistics
 
 | Item           | Count |
 | -------------- | ----- |
-| Total AI Tools | 72    |
+| Total AI Tools | 518+  |
 | Categories     | 16    |
 | Languages      | 5     |
-| Featured Tools | 11    |
-| Chinese Tools  | 25+   |
+| Featured Tools | 20+   |
+| Chinese Tools  | 100+  |
 
 ## ✨ Features
 
@@ -74,7 +75,10 @@
 - ✅ **Review System** - User ratings and reviews (Supabase storage)
 - ✅ **Admin Dashboard** - NextAuth login, review/service/submission management
 - ✅ **Tool Comparison** - Compare up to 4 AI tools side by side
-- ✅ **SEO Optimized** - Comprehensive SEO configuration
+- ✅ **Bookmarks** - Save and organize your favorite AI tools
+- ✅ **Newsletter** - Email subscription for weekly AI tool updates
+- ✅ **AI SEO Optimized** - sitemap.xml + robots.txt + llms.txt + JSON-LD structured data
+- ✅ **404 Handling** - Proper 404 pages for invalid routes instead of 500 errors
 
 ## 🎯 Quick Start
 
@@ -128,12 +132,13 @@ pnpm build
 
 | Technology         | Description                                      |
 | ------------------ | ------------------------------------------------ |
-| **Next.js 16**     | React framework with SSG and App Router          |
+| **Next.js 16**     | React framework with App Router + Turbopack      |
 | **TypeScript 5**   | Type-safe JavaScript                             |
 | **Tailwind CSS 4** | Utility-first CSS framework                      |
-| **React 19**       | Latest React version                             |
+| **React 19**       | Latest React with React Compiler                 |
 | **NextAuth v5**    | Authentication (GitHub OAuth)                    |
 | **Supabase**       | Backend database (reviews, ratings, submissions) |
+| **Resend**         | Email service for newsletters                    |
 
 ## 📂 Project Structure
 
@@ -142,11 +147,14 @@ ainav/
 ├── src/
 │   ├── app/              # Next.js App Router pages
 │   │   ├── [lang]/       # Multi-language routes (en/zh/ja/ko/fr)
+│   │   │   ├── bookmarks/      # User bookmarks page
 │   │   │   ├── category/[id]/  # Category pages
 │   │   │   ├── compare/        # Tool comparison page
 │   │   │   ├── search/         # Search page
+│   │   │   ├── service/[id]/   # Tool detail pages
 │   │   │   └── submit/         # Submit page
 │   │   ├── admin/        # Admin dashboard
+│   │   │   ├── emails/         # Email campaign management
 │   │   │   ├── reviews/        # Review management
 │   │   │   ├── services/       # Service management
 │   │   │   └── submissions/    # Submission review
@@ -154,18 +162,22 @@ ainav/
 │   │   │   ├── admin/          # Admin APIs
 │   │   │   ├── auth/           # NextAuth
 │   │   │   ├── reviews/        # Review APIs
-│   │   │   └── submit/         # Submit API
+│   │   │   ├── subscribe/      # Newsletter subscription
+│   │   │   └── webhooks/       # Resend webhooks
 │   │   ├── auth/         # Login pages
+│   │   ├── llms.txt/     # AI-optimized llms.txt for LLM crawlers
+│   │   ├── llms-full.txt/# Full content llms.txt
 │   │   ├── layout.tsx    # Global layout
+│   │   ├── not-found.tsx # 404 page
 │   │   ├── page.tsx      # Home redirect
-│   │   ├── sitemap.ts    # Sitemap
+│   │   ├── sitemap.ts    # XML Sitemap
 │   │   └── robots.ts     # robots.txt
 │   ├── components/       # React components
 │   ├── lib/              # Utility functions
 │   └── types/            # TypeScript types
-├── locales/              # Translation files
+├── locales/              # Translation files (5 languages)
 ├── data/                 # AI tools data
-├── supabase/             # Supabase schema
+├── supabase/             # Supabase schema and migrations
 ├── public/               # Static assets
 └── package.json
 ```
@@ -213,9 +225,13 @@ Edit `data/ai-services.json`:
 - [x] Admin dashboard (NextAuth + Supabase)
 - [x] Online tool submission system
 - [x] Tool comparison feature
-- [ ] User favorites/bookmarks
+- [x] User favorites/bookmarks
+- [x] Newsletter subscription
+- [x] AI SEO (llms.txt for LLM crawlers)
+- [x] Proper 404 error handling
 - [ ] Tool changelog
 - [ ] Mobile app
+- [ ] AI-powered tool recommendations
 
 ## ⭐ Star History
 
