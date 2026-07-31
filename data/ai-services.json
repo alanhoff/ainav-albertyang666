@@ -984,5 +984,15 @@
     "language": [
       "en"
     ]
+  },
+  {
+    "id": "gptgeminigrok-ai",
+    "url": "https://trygrokai.asia/",
+    "category": "chat",
+    "featured": false,
+    "pricing": "freemium",
+    "language": [
+      "en"
+    ]
   }
 ]
