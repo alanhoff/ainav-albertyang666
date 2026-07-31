@@ -57,3 +57,29 @@ export async function getServiceRating(serviceId: string): Promise<{ average_sco
     review_count: data.review_count,
   };
 }
+
+// 获取工具的 AI 生成详情内容（使用场景/快速开始），无则返回 null
+export async function getToolContent(
+  serviceId: string,
+  locale: string
+): Promise<{ useCases: string[]; quickStart: string[] } | null> {
+  const { data, error } = await supabase
+    .from('tool_content')
+    .select('content')
+    .eq('service_id', serviceId)
+    .maybeSingle();
+
+  if (error || !data?.content) {
+    return null;
+  }
+
+  const localeContent = (data.content as Record<string, { useCases?: string[]; quickStart?: string[] }>)[locale];
+  if (!localeContent?.useCases?.length || !localeContent?.quickStart?.length) {
+    return null;
+  }
+
+  return {
+    useCases: localeContent.useCases,
+    quickStart: localeContent.quickStart,
+  };
+}

@@ -73,7 +73,10 @@ export type Dictionary = {
     filters: {
       category: string;
       allCategories: string;
+      pricing: string;
+      allPricing: string;
       sortBy: string;
+      defaultSort: string;
       relevance: string;
       rating: string;
       reviewCount: string;
@@ -90,6 +93,7 @@ export type Dictionary = {
     howToUse: string;
     quickStart: string;
     faq: string;
+    relatedTools: string;
   };
   category: {
     count: (count: number) => string;

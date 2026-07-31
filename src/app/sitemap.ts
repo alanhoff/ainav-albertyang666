@@ -9,6 +9,13 @@ export default async function sitemap() {
   const categories = getAllCategories();
   const services = await getAllAIServices('zh');
 
+  // 为路径生成各语言 alternates（hreflang）
+  const langAlternates = (subPath: string) => ({
+    languages: Object.fromEntries(
+      locales.map((l) => [l, `${baseUrl}/${l}${subPath}`])
+    ),
+  });
+
   // 分类页面
   const categoryUrls = locales.flatMap((locale) =>
     categories.map((category) => ({
@@ -16,6 +23,7 @@ export default async function sitemap() {
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.8,
+      alternates: langAlternates(`/category/${category.id}`),
     }))
   );
 
@@ -26,6 +34,7 @@ export default async function sitemap() {
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.9,
+      alternates: langAlternates(`/service/${service.id}`),
     }))
   );
 
@@ -36,24 +45,28 @@ export default async function sitemap() {
       lastModified: new Date(),
       changeFrequency: 'daily' as const,
       priority: 1,
+      alternates: langAlternates(''),
     },
     {
       url: `${baseUrl}/${locale}/search`,
       lastModified: new Date(),
       changeFrequency: 'daily' as const,
       priority: 0.7,
+      alternates: langAlternates('/search'),
     },
     {
       url: `${baseUrl}/${locale}/submit`,
       lastModified: new Date(),
       changeFrequency: 'monthly' as const,
       priority: 0.5,
+      alternates: langAlternates('/submit'),
     },
     {
       url: `${baseUrl}/${locale}/tools`,
       lastModified: new Date(),
       changeFrequency: 'daily' as const,
       priority: 0.85,
+      alternates: langAlternates('/tools'),
     },
   ]);
 

@@ -50,7 +50,10 @@ const frTranslations = {
     filters: {
       category: 'Filtrer par catégorie',
       allCategories: 'Toutes les catégories',
+      pricing: 'Filtrer par prix',
+      allPricing: 'Tous les prix',
       sortBy: 'Trier par',
+      defaultSort: 'Par défaut',
       relevance: 'Pertinence',
       rating: 'Note la plus élevée',
       reviewCount: 'Plus de commentaires',
@@ -157,6 +160,7 @@ const frTranslations = {
     howToUse: 'Guide d\'utilisation',
     quickStart: 'Démarrage rapide',
     faq: 'FAQ',
+    relatedTools: 'Outils similaires',
   },
   footer: {
     copyright: '© 2026 ainav.space - Répertoire d\'outils IA sélectionnés',

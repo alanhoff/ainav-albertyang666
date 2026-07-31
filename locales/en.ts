@@ -65,7 +65,10 @@ const enTranslations = {
     filters: {
       category: "Filter by Category",
       allCategories: "All Categories",
+      pricing: "Filter by Pricing",
+      allPricing: "All Pricing",
       sortBy: "Sort By",
+      defaultSort: "Default",
       relevance: "Relevance",
       rating: "Highest Rating",
       reviewCount: "Most Reviews",
@@ -163,6 +166,7 @@ const enTranslations = {
     howToUse: 'How to Use',
     quickStart: 'Quick Start',
     faq: 'FAQ',
+    relatedTools: 'Related Tools',
   },
   footer: {
     copyright: "© 2026 ainav.space - Curated AI tools directory",

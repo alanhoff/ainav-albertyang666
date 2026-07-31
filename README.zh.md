@@ -69,15 +69,18 @@
 
 - ✅ **智能搜索** - 支持名称、描述、标签多维度搜索
 - ✅ **分类浏览** - 16 大分类，快速定位所需工具
+- ✅ **高级筛选** - 全部工具页支持分类/价格筛选，按评分/评论数/名称排序
 - ✅ **多语言支持** - 完整的 5 语言翻译（中/英/日/韩/法）
 - ✅ **移动端优化** - 响应式导航，图标化操作，完美适配手机
 - ✅ **工具提交** - 在线表单提交新工具，后台审核
 - ✅ **评论系统** - 用户评分和评论（Supabase 存储）
-- ✅ **管理后台** - NextAuth 登录，评论/服务/提交审核
+- ✅ **管理后台** - NextAuth 登录，评论/服务/提交审核，精选开关，状态/详情内容筛选
+- ✅ **AI 内容生成** - 一键（或批量）用 DeepSeek 生成 5 语言的使用场景与快速开始指南
+- ✅ **相关工具推荐** - 详情页基于标签重合度推荐同分类工具，完善内链体系
 - ✅ **工具对比** - 最多支持 4 个 AI 工具并排对比
 - ✅ **收藏功能** - 收藏并整理你喜欢的 AI 工具
 - ✅ **邮件订阅** - 订阅每周 AI 工具更新邮件
-- ✅ **AI SEO 优化** - sitemap.xml + robots.txt + llms.txt + JSON-LD 结构化数据，适配传统和AI搜索引擎
+- ✅ **AI SEO 优化** - sitemap.xml（含多语言 alternates）+ robots.txt + llms.txt + JSON-LD 结构化数据 + 逐页 hreflang，适配传统和AI搜索引擎
 - ✅ **404 处理** - 无效路径正确返回404页面，避免500错误
 
 ## 🎯 快速开始
@@ -110,6 +113,9 @@ AUTH_SECRET=your_auth_secret  # 使用 openssl rand -base64 32 生成
 AUTH_GITHUB_ID=your_github_oauth_id
 AUTH_GITHUB_SECRET=your_github_oauth_secret
 ADMIN_EMAILS=admin@example.com  # 管理员邮箱，逗号分隔
+
+# DeepSeek（AI 翻译与工具详情内容生成，可选）
+DEEPSEEK_API_KEY=your_deepseek_api_key
 ```
 
 ### 🚀 运行项目

@@ -69,15 +69,18 @@
 
 - ✅ **Smart Search** - Search by name, description, and tags
 - ✅ **Category Browsing** - 16 categories for quick navigation
+- ✅ **Advanced Filtering** - Filter all tools by category/pricing, sort by rating/reviews/name
 - ✅ **Multi-language** - Full translations in 5 languages
 - ✅ **Mobile Optimized** - Responsive navigation, icon-based UI
 - ✅ **Tool Submission** - Online form submission with admin review
 - ✅ **Review System** - User ratings and reviews (Supabase storage)
-- ✅ **Admin Dashboard** - NextAuth login, review/service/submission management
+- ✅ **Admin Dashboard** - NextAuth login, review/service/submission management, featured toggle, status & content filters
+- ✅ **AI Content Generation** - One-click (or batch) DeepSeek-generated use cases & quick start guides in 5 languages
+- ✅ **Related Tools** - Tag-based related tool recommendations on every detail page for internal linking
 - ✅ **Tool Comparison** - Compare up to 4 AI tools side by side
 - ✅ **Bookmarks** - Save and organize your favorite AI tools
 - ✅ **Newsletter** - Email subscription for weekly AI tool updates
-- ✅ **AI SEO Optimized** - sitemap.xml + robots.txt + llms.txt + JSON-LD structured data
+- ✅ **AI SEO Optimized** - sitemap.xml (with hreflang alternates) + robots.txt + llms.txt + JSON-LD structured data + per-page hreflang
 - ✅ **404 Handling** - Proper 404 pages for invalid routes instead of 500 errors
 
 ## 🎯 Quick Start
@@ -110,6 +113,9 @@ AUTH_SECRET=your_auth_secret  # Generate with: openssl rand -base64 32
 AUTH_GITHUB_ID=your_github_oauth_id
 AUTH_GITHUB_SECRET=your_github_oauth_secret
 ADMIN_EMAILS=admin@example.com  # Admin emails, comma separated
+
+# DeepSeek (for AI translation & tool content generation, optional)
+DEEPSEEK_API_KEY=your_deepseek_api_key
 ```
 
 ### 🚀 Development

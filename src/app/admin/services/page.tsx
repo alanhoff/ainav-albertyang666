@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   Search, 
   ExternalLink, 
@@ -11,6 +11,7 @@ import {
   Zap, 
   Coins,
   Languages,
+  Sparkles,
   X,
   Save
 } from 'lucide-react';
@@ -37,9 +38,92 @@ export default function AdminServicesPage() {
   const [services, setServices] = useState<AIService[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'disabled'>('all');
+  const [contentFilter, setContentFilter] = useState<'all' | 'generated' | 'missing'>('all');
   const [loading, setLoading] = useState(true);
   const [editState, setEditState] = useState<EditState | null>(null);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
+  const [contentIds, setContentIds] = useState<Set<string>>(new Set());
+  const [generatingId, setGeneratingId] = useState<string | null>(null);
+  const [batchState, setBatchState] = useState<{ done: number; total: number; failed: number } | null>(null);
+  const batchStopRef = useRef(false);
+
+  const fetchContentIds = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/tool-content');
+      if (res.ok) {
+        const data = await res.json();
+        setContentIds(new Set((data.items || []).map((i: { service_id: string }) => i.service_id)));
+      }
+    } catch {
+      // 非关键信息，失败忽略
+    }
+  }, []);
+
+  const generateContent = async (serviceId: string) => {
+    const hasContent = contentIds.has(serviceId);
+    if (hasContent && !confirm('该工具已有 AI 生成内容，重新生成将覆盖旧内容，继续？')) return;
+    setGeneratingId(serviceId);
+    try {
+      const res = await fetch('/api/admin/tool-content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: serviceId, force: hasContent }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setContentIds(prev => new Set(prev).add(serviceId));
+        setSaveMsg(`✅ ${serviceId} 详情内容生成成功（5 语言）`);
+      } else {
+        setSaveMsg(`❌ 生成失败：${data.error || data.message || '未知错误'}`);
+      }
+    } catch {
+      setSaveMsg('❌ 生成失败，请重试');
+    } finally {
+      setGeneratingId(null);
+    }
+  };
+
+  // 批量生成：仅处理还没有内容的工具，串行调用避免 API 限流
+  const batchGenerate = async (pending: AIService[]) => {
+    if (pending.length === 0) {
+      setSaveMsg('✅ 当前列表中的工具都已生成内容');
+      return;
+    }
+    if (!confirm(`将为 ${pending.length} 个工具生成详情内容（已生成的自动跳过），继续？`)) return;
+
+    batchStopRef.current = false;
+    let done = 0;
+    let failed = 0;
+    setBatchState({ done: 0, total: pending.length, failed: 0 });
+
+    for (const service of pending) {
+      if (batchStopRef.current) break;
+      try {
+        const res = await fetch('/api/admin/tool-content', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: service.id }),
+        });
+        const data = await res.json();
+        if (res.ok && (data.success || data.skipped)) {
+          setContentIds(prev => new Set(prev).add(service.id));
+        } else {
+          failed++;
+        }
+      } catch {
+        failed++;
+      }
+      done++;
+      setBatchState({ done, total: pending.length, failed });
+    }
+
+    const stopped = batchStopRef.current;
+    setBatchState(null);
+    setSaveMsg(
+      `${failed === 0 ? '✅' : '⚠️'} 批量生成${stopped ? '已停止' : '完成'}：成功 ${done - failed}/${pending.length}${failed > 0 ? `，失败 ${failed}` : ''}`
+    );
+  };
 
   const fetchServices = useCallback(async () => {
     try {
@@ -55,9 +139,35 @@ export default function AdminServicesPage() {
     }
   }, []);
 
+  const [togglingFeaturedId, setTogglingFeaturedId] = useState<string | null>(null);
+
+  const toggleFeatured = async (service: AIService) => {
+    setTogglingFeaturedId(service.id);
+    try {
+      const res = await fetch('/api/admin/services', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: service.id, featured: !service.featured }),
+      });
+      if (res.ok) {
+        // 乐观更新，避免重新拉取全量列表
+        setServices(prev => prev.map(s => s.id === service.id ? { ...s, featured: !service.featured } : s));
+        setSaveMsg(`✅ ${service.name || service.id} 已${service.featured ? '取消' : '设为'}精选`);
+      } else {
+        const data = await res.json();
+        setSaveMsg(`❌ 操作失败：${data.error || '未知错误'}（仅支持数据库中的工具）`);
+      }
+    } catch {
+      setSaveMsg('❌ 操作失败，请重试');
+    } finally {
+      setTogglingFeaturedId(null);
+    }
+  };
+
   useEffect(() => {
     fetchServices();
-  }, [fetchServices]);
+    fetchContentIds();
+  }, [fetchServices, fetchContentIds]);
 
   const openEdit = (service: AIService, locale: Locale) => {
     setEditState({
@@ -111,7 +221,13 @@ export default function AdminServicesPage() {
       service.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       service.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = categoryFilter === 'all' || service.category === categoryFilter;
-    return matchesSearch && matchesCategory;
+    // JSON 基线工具无 status 字段，视为 active
+    const effectiveStatus = (service as AIService & { status?: string }).status || 'active';
+    const matchesStatus = statusFilter === 'all'
+      || (statusFilter === 'active' ? effectiveStatus === 'active' : effectiveStatus !== 'active');
+    const matchesContent = contentFilter === 'all'
+      || (contentFilter === 'generated' ? contentIds.has(service.id) : !contentIds.has(service.id));
+    return matchesSearch && matchesCategory && matchesStatus && matchesContent;
   });
 
   if (loading) {
@@ -135,6 +251,34 @@ export default function AdminServicesPage() {
             共 {services.length} 个服务
           </p>
         </div>
+        {/* 批量 AI 生成（作用于当前筛选结果中未生成的工具） */}
+        {batchState ? (
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+              <div className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+              <span>
+                {batchState.done}/{batchState.total}
+                {batchState.failed > 0 && <span className="text-red-500 ml-1">（失败 {batchState.failed}）</span>}
+              </span>
+            </div>
+            <button
+              onClick={() => { batchStopRef.current = true; }}
+              className="inline-flex items-center px-3 py-2 text-sm rounded-lg bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800 transition-colors"
+            >
+              停止
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => batchGenerate(filteredServices.filter(s => !contentIds.has(s.id)))}
+            disabled={loading || generatingId !== null}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800 transition-colors disabled:opacity-50"
+            title="为当前筛选结果中未生成内容的工具批量生成详情内容"
+          >
+            <Sparkles className="w-4 h-4" />
+            批量生成（{filteredServices.filter(s => !contentIds.has(s.id)).length}）
+          </button>
+        )}
       </div>
 
       {/* 筛选栏 */}
@@ -169,7 +313,48 @@ export default function AdminServicesPage() {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
           </div>
         </div>
+        <div className="h-px w-full sm:h-10 sm:w-px bg-gray-100 dark:bg-gray-700" />
+        {/* 状态筛选 */}
+        <div className="relative min-w-[140px]">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'disabled')}
+            className="w-full pl-4 pr-8 py-2.5 bg-transparent border-none text-gray-900 dark:text-white appearance-none cursor-pointer focus:outline-none focus:ring-0"
+            style={{ backgroundImage: 'none' }}
+          >
+            <option value="all">所有状态</option>
+            <option value="active">✅ 已启用</option>
+            <option value="disabled">🚫 已禁用</option>
+          </select>
+          <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+          </div>
+        </div>
+        <div className="h-px w-full sm:h-10 sm:w-px bg-gray-100 dark:bg-gray-700" />
+        {/* AI 详情内容筛选 */}
+        <div className="relative min-w-[160px]">
+          <select
+            value={contentFilter}
+            onChange={(e) => setContentFilter(e.target.value as 'all' | 'generated' | 'missing')}
+            className="w-full pl-4 pr-8 py-2.5 bg-transparent border-none text-gray-900 dark:text-white appearance-none cursor-pointer focus:outline-none focus:ring-0"
+            style={{ backgroundImage: 'none' }}
+          >
+            <option value="all">所有详情内容</option>
+            <option value="generated">✨ 已生成详情</option>
+            <option value="missing">⚠️ 未生成详情</option>
+          </select>
+          <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+          </div>
+        </div>
       </div>
+
+      {/* 生成结果提示 */}
+      {saveMsg && !editState && (
+        <div className={`rounded-2xl px-4 py-3 text-sm border ${saveMsg.includes('✅') || saveMsg.includes('成功') ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800' : 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800'}`}>
+          {saveMsg}
+        </div>
+      )}
 
       {/* 服务列表 - 桌面端表格 */}
       <div className="hidden lg:block bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden border border-gray-100 dark:border-gray-700/50">
@@ -218,14 +403,21 @@ export default function AdminServicesPage() {
                     <PricingBadge pricing={service.pricing || 'free'} />
                   </td>
                   <td className="px-6 py-4">
-                    {service.featured ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 text-xs font-medium border border-yellow-200 dark:border-yellow-900">
-                        <Star className="w-3.5 h-3.5 fill-current" />
-                        Featured
-                      </span>
-                    ) : (
-                      <span className="text-gray-300 dark:text-gray-600">-</span>
-                    )}
+                    <button
+                      onClick={() => toggleFeatured(service)}
+                      disabled={togglingFeaturedId !== null}
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors disabled:opacity-50 ${service.featured
+                        ? 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 border-yellow-200 dark:border-yellow-900 hover:bg-yellow-100'
+                        : 'bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 border-gray-200 dark:border-gray-700 hover:text-yellow-500 hover:border-yellow-200 hover:bg-yellow-50'}`}
+                      title={service.featured ? '点击取消精选' : '点击设为精选（首页展示）'}
+                    >
+                      {togglingFeaturedId === service.id ? (
+                        <div className="w-3.5 h-3.5 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Star className={`w-3.5 h-3.5 ${service.featured ? 'fill-current' : ''}`} />
+                      )}
+                      {service.featured ? 'Featured' : '设为精选'}
+                    </button>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex flex-wrap gap-1.5">
@@ -241,6 +433,19 @@ export default function AdminServicesPage() {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-1">
+                      {/* AI 生成详情内容 */}
+                      <button
+                        onClick={() => generateContent(service.id)}
+                        disabled={generatingId !== null || batchState !== null}
+                        className={`inline-flex items-center justify-center p-2 rounded-lg transition-colors disabled:opacity-50 ${contentIds.has(service.id) ? 'text-green-500 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30' : 'text-gray-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/30'}`}
+                        title={contentIds.has(service.id) ? '已生成详情内容，点击重新生成' : 'AI 生成详情内容（使用场景/快速开始）'}
+                      >
+                        {generatingId === service.id ? (
+                          <div className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Sparkles className="w-4 h-4" />
+                        )}
+                      </button>
                       {/* 编辑翻译下拉 */}
                       <div className="relative group/menu">
                         <button
@@ -356,7 +561,18 @@ export default function AdminServicesPage() {
                       {locale}
                     </button>
                   ))}
-                  {service.featured && <Star className="w-5 h-5 text-yellow-500 fill-yellow-500 flex-shrink-0 ml-1" />}
+                  <button
+                    onClick={() => toggleFeatured(service)}
+                    disabled={togglingFeaturedId !== null}
+                    className="ml-1 flex-shrink-0 disabled:opacity-50"
+                    title={service.featured ? '点击取消精选' : '点击设为精选'}
+                  >
+                    {togglingFeaturedId === service.id ? (
+                      <div className="w-5 h-5 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Star className={`w-5 h-5 transition-colors ${service.featured ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300 dark:text-gray-600 hover:text-yellow-400'}`} />
+                    )}
+                  </button>
                 </div>
               </div>
               
@@ -379,6 +595,19 @@ export default function AdminServicesPage() {
               </div>
 
               <div className="flex gap-2 pt-3 border-t border-gray-100 dark:border-gray-700">
+                <button
+                  onClick={() => generateContent(service.id)}
+                  disabled={generatingId !== null || batchState !== null}
+                  className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sm rounded-lg transition-colors border disabled:opacity-50 ${contentIds.has(service.id) ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800' : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800'}`}
+                  title={contentIds.has(service.id) ? '已生成，点击重新生成' : 'AI 生成详情内容'}
+                >
+                  {generatingId === service.id ? (
+                    <div className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Sparkles className="w-4 h-4" />
+                  )}
+                  AI
+                </button>
                 <button
                   onClick={async () => {
                     try {

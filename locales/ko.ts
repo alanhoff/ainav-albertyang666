@@ -48,7 +48,10 @@ const koTranslations = {
     filters: {
       category: '카테고리별 필터',
       allCategories: '전체 카테고리',
+      pricing: '가격별 필터',
+      allPricing: '전체 가격',
       sortBy: '정렬 기준',
+      defaultSort: '기본 정렬',
       relevance: '관련성',
       rating: '평점 높은 순',
       reviewCount: '리뷰 많은 순',
@@ -155,6 +158,7 @@ const koTranslations = {
     howToUse: '사용 가이드',
     quickStart: '빠른 시작',
     faq: '자주 묻는 질문',
+    relatedTools: '관련 도구',
   },
   footer: {
     copyright: '© 2026 ainav.space - 엄선된 AI 도구 디렉토리',

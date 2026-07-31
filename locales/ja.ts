@@ -48,7 +48,10 @@ const jaTranslations = {
     filters: {
       category: 'カテゴリーで絞り込む',
       allCategories: '全カテゴリー',
+      pricing: '料金で絞り込む',
+      allPricing: 'すべての料金',
       sortBy: '並び替え',
+      defaultSort: 'デフォルト',
       relevance: '関連度',
       rating: '評価が高い順',
       reviewCount: 'レビューが多い順',
@@ -155,6 +158,7 @@ const jaTranslations = {
     howToUse: '使用ガイド',
     quickStart: 'クイックスタート',
     faq: 'よくある質問',
+    relatedTools: '関連ツール',
   },
   footer: {
     copyright: '© 2026 ainav.space - 厳選AIツールディレクトリ',

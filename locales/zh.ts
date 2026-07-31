@@ -65,7 +65,10 @@ const zhTranslations = {
     filters: {
       category: "分类筛选",
       allCategories: "全部分类",
+      pricing: "价格筛选",
+      allPricing: "全部价格",
       sortBy: "排序方式",
+      defaultSort: "默认排序",
       relevance: "相关度",
       rating: "评分最高",
       reviewCount: "评论最多",
@@ -161,6 +164,7 @@ const zhTranslations = {
     howToUse: '使用指南',
     quickStart: '快速开始',
     faq: '常见问题',
+    relatedTools: '相关工具推荐',
   },
   footer: {
     copyright: "© 2026 ainav.space - 精选优质AI工具导航",

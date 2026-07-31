@@ -350,3 +350,22 @@ CREATE POLICY "tools_read_active" ON public.tools FOR SELECT USING (status = 'ac
 CREATE POLICY "tools_write_internal" ON public.tools FOR INSERT WITH CHECK (false);
 CREATE POLICY "tools_update_internal" ON public.tools FOR UPDATE USING (false);
 CREATE POLICY "tools_delete_internal" ON public.tools FOR DELETE USING (false);
+
+-- ============================================
+-- AI 生成的工具详情内容（使用场景/快速开始）
+-- ============================================
+CREATE TABLE IF NOT EXISTS public.tool_content (
+  service_id VARCHAR(255) PRIMARY KEY,
+  -- content 格式: {"zh": {"useCases": ["..."], "quickStart": ["..."]}, "en": {...}, ...}
+  content JSONB NOT NULL DEFAULT '{}',
+  generated_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.tool_content ENABLE ROW LEVEL SECURITY;
+
+-- 所有人可读，仅 service role 可写
+CREATE POLICY "tool_content_read_all" ON public.tool_content FOR SELECT USING (true);
+CREATE POLICY "tool_content_insert_internal" ON public.tool_content FOR INSERT WITH CHECK (false);
+CREATE POLICY "tool_content_update_internal" ON public.tool_content FOR UPDATE USING (false);
+CREATE POLICY "tool_content_delete_internal" ON public.tool_content FOR DELETE USING (false);

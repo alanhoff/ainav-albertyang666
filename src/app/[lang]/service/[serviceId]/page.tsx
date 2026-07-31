@@ -1,11 +1,12 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import ReviewSection from '@/components/ReviewSection';
+import AIServiceCard from '@/components/AIServiceCard';
 import { getAllAIServices, getAIServiceById, getCategoryById } from '@/lib/data';
-import { generateSEO, generateProductSchema, generateBreadcrumbSchema } from '@/lib/seo';
+import { generateSEO, generateProductSchema, generateBreadcrumbSchema, generateItemListSchema } from '@/lib/seo';
 import type { Metadata } from 'next';
 import { Locale, locales, getPricingLabel, getDictionary } from '@/lib/i18n';
-import { getServiceRating } from '@/lib/supabase';
+import { getServiceRating, getAllRatings, getToolContent } from '@/lib/supabase';
 
 interface ServicePageProps {
   params: Promise<{ lang: Locale; serviceId: string }>;
@@ -78,8 +79,25 @@ export default async function ServicePage({ params }: ServicePageProps) {
   const dictionary = getDictionary(lang);
   const category = getCategoryById(service!.category, lang);
 
+  // 相关工具：同分类优先，按标签重合度排序，取前 6 个
+  const allServices = await getAllAIServices(lang);
+  const tagSet = new Set(service.tags);
+  const relatedServices = allServices
+    .filter((s) => s.id !== service.id && s.category === service.category)
+    .map((s) => ({
+      service: s,
+      score: s.tags.reduce((acc, t) => acc + (tagSet.has(t) ? 1 : 0), 0) + (s.featured ? 0.5 : 0),
+    }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 6)
+    .map((x) => x.service);
+
   // Generate JSON-LD structured data
-  const rating = await getServiceRating(serviceId);
+  const [rating, ratingsMap, aiContent] = await Promise.all([
+    getServiceRating(serviceId),
+    getAllRatings(),
+    getToolContent(serviceId, lang),
+  ]);
   const productSchema = generateProductSchema({
     name: service.name,
     description: service.description,
@@ -101,6 +119,16 @@ export default async function ServicePage({ params }: ServicePageProps) {
       url: `https://ainav.space/${lang}/service/${serviceId}`,
     },
   ]);
+
+  const relatedListSchema = relatedServices.length > 0
+    ? generateItemListSchema(
+        relatedServices.map((s, i) => ({
+          name: s.name,
+          url: `https://ainav.space/${lang}/service/${s.id}`,
+          position: i + 1,
+        }))
+      )
+    : null;
 
   const pricingColors = {
     free: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
@@ -201,6 +229,15 @@ export default async function ServicePage({ params }: ServicePageProps) {
             {dictionary.serviceDetail.useCases}
           </h2>
           <ul className="space-y-3">
+            {aiContent ? (
+              aiContent.useCases.map((useCase, index) => (
+                <li key={index} className="flex items-start gap-2">
+                  <span className="text-purple-600 dark:text-purple-400 mt-1">•</span>
+                  <span className="text-gray-700 dark:text-gray-300">{useCase}</span>
+                </li>
+              ))
+            ) : (
+              <>
             <li className="flex items-start gap-2">
               <span className="text-purple-600 dark:text-purple-400 mt-1">•</span>
               <span className="text-gray-700 dark:text-gray-300">
@@ -225,6 +262,8 @@ export default async function ServicePage({ params }: ServicePageProps) {
                 {lang === 'zh' ? '客户服务和支持优化' : lang === 'ja' ? 'カスタマーサービスとサポートの最適化' : lang === 'ko' ? '고객 서비스 및 지원 최적화' : lang === 'fr' ? 'Optimisation du service client et du support' : 'Customer service and support optimization'}
               </span>
             </li>
+              </>
+            )}
           </ul>
         </div>
       </div>
@@ -238,6 +277,15 @@ export default async function ServicePage({ params }: ServicePageProps) {
           {dictionary.serviceDetail.quickStart}
         </h2>
         <ol className="space-y-3">
+          {aiContent ? (
+            aiContent.quickStart.map((step, index) => (
+              <li key={index} className="flex gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold">{index + 1}</span>
+                <span className="text-gray-700 dark:text-gray-300">{step}</span>
+              </li>
+            ))
+          ) : (
+            <>
           <li className="flex gap-3">
             <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold">1</span>
             <span className="text-gray-700 dark:text-gray-300">
@@ -256,11 +304,46 @@ export default async function ServicePage({ params }: ServicePageProps) {
               {lang === 'zh' ? '浏览教程和文档开始使用' : lang === 'ja' ? 'チュートリアルとドキュメントを参照して使用開始' : lang === 'ko' ? '튜토리얼 및 문서를 보고 사용 시작' : lang === 'fr' ? 'Consultez les tutoriels et la documentation pour commencer' : 'Explore tutorials and documentation to get started'}
             </span>
           </li>
+            </>
+          )}
         </ol>
       </div>
 
       {/* 评论与评分部分 */}
       <ReviewSection serviceId={serviceId} locale={lang} />
+
+      {/* 相关工具推荐（内链） */}
+      {relatedServices.length > 0 && (
+        <section className="mt-12">
+          {relatedListSchema && (
+            <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{ __html: JSON.stringify(relatedListSchema) }}
+            />
+          )}
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              {dictionary.serviceDetail.relatedTools}
+            </h2>
+            <Link
+              href={`/${lang}/category/${service.category}`}
+              className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              {category?.name} →
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {relatedServices.map((related) => (
+              <AIServiceCard
+                key={related.id}
+                service={related}
+                locale={lang}
+                rating={ratingsMap.get(related.id) || null}
+              />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
     </>
   );

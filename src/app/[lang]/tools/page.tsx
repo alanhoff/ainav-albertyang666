@@ -1,7 +1,7 @@
-import AIServiceCard from '@/components/AIServiceCard';
-import { getAllAIServices } from '@/lib/data';
+import ToolsExplorer from '@/components/ToolsExplorer';
+import { getAllAIServices, getAllCategories } from '@/lib/data';
 import { getDictionary, Locale, locales } from '@/lib/i18n';
-import { generateSEO } from '@/lib/seo';
+import { generateSEO, generateItemListSchema, generateBreadcrumbSchema } from '@/lib/seo';
 import { getAllRatings } from '@/lib/supabase';
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -30,9 +30,27 @@ export default async function AllToolsPage({ params }: { params: Promise<{ lang:
     getAllAIServices(lang),
     getAllRatings(),
   ]);
+  const categories = getAllCategories(lang);
+  // Map -> 可序列化的普通对象，传给客户端组件
+  const ratings = Object.fromEntries(ratingsMap);
+
+  const baseUrl = 'https://ainav.space';
+  const itemListSchema = generateItemListSchema(
+    allServices.map((s, i) => ({
+      name: s.name,
+      url: `${baseUrl}/${lang}/service/${s.id}`,
+      position: i + 1,
+    }))
+  );
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: dictionary.siteName, url: `${baseUrl}/${lang}` },
+    { name: dictionary.stats.tools, url: `${baseUrl}/${lang}/tools` },
+  ]);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       <div className="container mx-auto px-4 py-8 md:py-12">
         {/* Header */}
         <div className="mb-8">
@@ -51,26 +69,13 @@ export default async function AllToolsPage({ params }: { params: Promise<{ lang:
           </p>
         </div>
 
-        {/* Tools Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {allServices.map((service) => (
-            <AIServiceCard
-              key={service.id}
-              service={service}
-              locale={lang}
-              rating={ratingsMap.get(service.id) || null}
-            />
-          ))}
-        </div>
-
-        {/* Empty State */}
-        {allServices.length === 0 && (
-          <div className="text-center py-20">
-            <p className="text-gray-500 dark:text-gray-400 text-lg">
-              {dictionary.category.empty}
-            </p>
-          </div>
-        )}
+        {/* Filters + Tools Grid */}
+        <ToolsExplorer
+          locale={lang}
+          services={allServices}
+          categories={categories}
+          ratings={ratings}
+        />
       </div>
     </div>
   );

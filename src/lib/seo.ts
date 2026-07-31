@@ -46,6 +46,20 @@ export function generateSEO({
 
   const canonicalUrl = url.startsWith('http') ? url : `${siteConfig.url}${url}`;
 
+  // hreflang：将当前路径映射到各语言版本（而非各语言首页）
+  const path = canonicalUrl.replace(siteConfig.url, '');
+  // 去掉路径中的语言前缀，得到语言无关的子路径，如 /service/chatgpt
+  const langPrefixMatch = path.match(/^\/(zh|en|ja|ko|fr)(\/.*)?$/);
+  const subPath = langPrefixMatch ? (langPrefixMatch[2] || '') : path;
+  const hreflangMap: Record<string, string> = {
+    'zh-CN': `${siteConfig.url}/zh${subPath}`,
+    'en-US': `${siteConfig.url}/en${subPath}`,
+    'ja-JP': `${siteConfig.url}/ja${subPath}`,
+    'ko-KR': `${siteConfig.url}/ko${subPath}`,
+    'fr-FR': `${siteConfig.url}/fr${subPath}`,
+    'x-default': `${siteConfig.url}/en${subPath}`,
+  };
+
   return {
     title: fullTitle,
     description: finalDescription,
@@ -56,13 +70,7 @@ export function generateSEO({
     metadataBase: new URL(siteConfig.url),
     alternates: {
       canonical: canonicalUrl,
-      languages: {
-        'zh-CN': `${siteConfig.url}/zh`,
-        'en-US': `${siteConfig.url}/en`,
-        'ja-JP': `${siteConfig.url}/ja`,
-        'ko-KR': `${siteConfig.url}/ko`,
-        'fr-FR': `${siteConfig.url}/fr`,
-      },
+      languages: hreflangMap,
     },
     openGraph: {
       type,
