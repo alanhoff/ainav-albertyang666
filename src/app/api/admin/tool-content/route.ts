@@ -82,15 +82,90 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * GET /api/admin/tool-content
- * 返回已生成内容的工具 ID 列表（供后台展示生成状态）
+ * PATCH /api/admin/tool-content
+ * 手动更新指定工具的使用场景/快速开始内容（指定语言）
+ * body: { id: string, locale: string, useCases: string[], quickStart: string[] }
  */
-export async function GET() {
+export async function PATCH(request: NextRequest) {
   try {
     const unauthorized = await assertAdmin();
     if (unauthorized) return unauthorized;
 
+    const { id, locale, useCases, quickStart } = await request.json();
+    if (!id || typeof id !== 'string' || !locale || typeof locale !== 'string') {
+      return NextResponse.json({ error: 'Missing id or locale' }, { status: 400 });
+    }
+    if (!Array.isArray(useCases) || !Array.isArray(quickStart)) {
+      return NextResponse.json({ error: 'useCases and quickStart must be arrays' }, { status: 400 });
+    }
+
     const supabase = getSupabaseAdmin();
+
+    const { data: row, error: fetchError } = await supabase
+      .from('tool_content')
+      .select('content')
+      .eq('service_id', id)
+      .single();
+
+    if (fetchError) {
+      return NextResponse.json({ error: fetchError.message }, { status: 500 });
+    }
+
+    const currentContent = (row?.content as Record<string, { useCases?: string[]; quickStart?: string[] }>) || {};
+    const updatedContent = {
+      ...currentContent,
+      [locale]: { useCases, quickStart },
+    };
+
+    const { error } = await supabase
+      .from('tool_content')
+      .upsert({
+        service_id: id,
+        content: updatedContent,
+        updated_at: new Date().toISOString(),
+      });
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    revalidateTag('tools', {});
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('PATCH tool-content error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+/**
+ * GET /api/admin/tool-content
+ * 返回已生成内容的工具 ID 列表（供后台展示生成状态）
+ * 或指定 service_id 时返回该工具的完整 content
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const unauthorized = await assertAdmin();
+    if (unauthorized) return unauthorized;
+
+    const { searchParams } = new URL(request.url);
+    const serviceId = searchParams.get('serviceId');
+
+    const supabase = getSupabaseAdmin();
+
+    if (serviceId) {
+      const { data, error } = await supabase
+        .from('tool_content')
+        .select('content')
+        .eq('service_id', serviceId)
+        .maybeSingle();
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      return NextResponse.json({ content: (data?.content as Record<string, unknown>) || {} });
+    }
+
     const { data, error } = await supabase
       .from('tool_content')
       .select('service_id, generated_at');

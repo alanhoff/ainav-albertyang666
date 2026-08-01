@@ -40,6 +40,8 @@ interface CoreFieldsForm {
   language: string; // 逗号分隔
   featured: boolean;
   status: 'active' | 'disabled';
+  useCases: string; // 逗号分隔
+  quickStart: string; // 逗号分隔
 }
 
 interface EditState {
@@ -207,7 +209,17 @@ export default function AdminServicesPage() {
     setSaveMsg(null);
   };
 
-  const openCoreEdit = (service: AIService) => {
+  const openCoreEdit = async (service: AIService) => {
+    const contentRes = await fetch(`/api/admin/tool-content?serviceId=${encodeURIComponent(service.id)}`);
+    let useCases = '';
+    let quickStart = '';
+    if (contentRes.ok) {
+      const contentData = await contentRes.json();
+      const localeContent = contentData.content?.zh || contentData.content?.en || {};
+      useCases = (localeContent.useCases || []).join('\n');
+      quickStart = (localeContent.quickStart || []).join('\n');
+    }
+
     setCoreEditState({
       service,
       form: {
@@ -220,6 +232,8 @@ export default function AdminServicesPage() {
         language: (service.language || []).join(', '),
         featured: service.featured || false,
         status: (service as AIService & { status?: 'active' | 'disabled' }).status || 'active',
+        useCases,
+        quickStart,
       },
       saving: false,
     });
@@ -247,9 +261,24 @@ export default function AdminServicesPage() {
           status: coreEditState.form.status,
         }),
       });
-      if (res.ok) {
+
+      const useCases = coreEditState.form.useCases.split('\n').map(s => s.trim()).filter(Boolean);
+      const quickStart = coreEditState.form.quickStart.split('\n').map(s => s.trim()).filter(Boolean);
+      const contentRes = await fetch('/api/admin/tool-content', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: coreEditState.service.id,
+          locale: 'zh',
+          useCases,
+          quickStart,
+        }),
+      });
+
+      if (res.ok && contentRes.ok) {
         setSaveMsg('保存成功！页面缓存已刷新。');
         await fetchServices();
+        await fetchContentIds();
       } else {
         const data = await res.json();
         setSaveMsg(`保存失败：${data.error || '未知错误'}（仅支持写入数据库中的工具）`);
@@ -877,6 +906,26 @@ export default function AdminServicesPage() {
                   />
                   已启用
                 </label>
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">使用场景（每行一条）</label>
+                <textarea
+                  rows={4}
+                  value={coreEditState.form.useCases}
+                  onChange={e => setCoreEditState(prev => prev ? { ...prev, form: { ...prev.form, useCases: e.target.value } } : null)}
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  placeholder="场景1&#10;场景2&#10;场景3&#10;场景4"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">快速开始（每行一条步骤）</label>
+                <textarea
+                  rows={3}
+                  value={coreEditState.form.quickStart}
+                  onChange={e => setCoreEditState(prev => prev ? { ...prev, form: { ...prev.form, quickStart: e.target.value } } : null)}
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  placeholder="步骤1&#10;步骤2&#10;步骤3"
+                />
               </div>
               {saveMsg && (
                 <p className={`text-sm rounded-lg px-3 py-2 ${saveMsg.includes('成功') ? 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
