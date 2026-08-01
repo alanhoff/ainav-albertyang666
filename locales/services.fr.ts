@@ -144,6 +144,11 @@ const frServices = {
   'coderplan': { name: 'CoderPlan', description: 'Service relais API compatible OpenAI abordable avec accès unifié à GPT-4o, Claude, Gemini et 100+ modèles IA.', tags: ["API","OpenAI","Relais","Codage IA","Outils développeur"] },
   'lockedin-ai': { name: 'LockedIn AI', description: 'Assistant IA de développement de carrière pour préparation d\'entretien, optimisation de CV et planification de carrière.', tags: ["Entretien","Carrière","CV"] },
   'medally': { name: 'Medally', description: 'Outil de productivité intelligent pour notes de réunion, gestion des tâches et collaboration avec résumés automatiques.', tags: ["Notes réunion","Gestion tâches","Collaboration"] },
+  'saascity': {
+    name: 'SaaSCity',
+    description: "Annuaire SaaS et IA gamifié où chaque produit référencé devient un bâtiment sur une carte isométrique vivante.",
+    tags: ["Annuaire","Lancement","SaaS"],
+  },
 };
 
 export default frServices;
