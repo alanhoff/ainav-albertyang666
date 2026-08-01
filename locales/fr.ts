@@ -22,8 +22,8 @@ const frTranslations = {
   sections: {
     browseCategories: 'Parcourir les catégories',
     featured: 'Sélection recommandée',
-    viewAll: 'Voir tout',
-  },
+    viewAll: 'Voir tout',    showMore: "Voir plus",
+    showLess: "Voir moins",  },
   newsletter: {
     title: 'Restez informé des innovations IA',
     description: 'Recevez chaque semaine les derniers outils, tendances et ressources IA directement dans votre boîte mail.',

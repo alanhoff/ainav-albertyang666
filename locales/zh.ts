@@ -37,6 +37,8 @@ const zhTranslations = {
     browseCategories: "浏览分类",
     featured: "精选推荐",
     viewAll: "查看全部",
+    showMore: "展开更多",
+    showLess: "收起",
   },
   newsletter: {
     title: "订阅 AI 工具更新",

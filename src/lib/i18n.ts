@@ -46,6 +46,8 @@ export type Dictionary = {
     browseCategories: string;
     featured: string;
     viewAll: string;
+    showMore: string;
+    showLess: string;
   };
   newsletter: {
     title: string;

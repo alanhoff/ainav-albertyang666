@@ -176,13 +176,13 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
             </Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredServices.slice(0, 6).map((service) => (
-              <AIServiceCard 
-                key={service.id} 
-                service={service} 
-                locale={lang} 
+            {featuredServices.map((service) => (
+              <AIServiceCard
+                key={service.id}
+                service={service}
+                locale={lang}
                 rating={ratingsMap[service.id] || null}
-            />
+              />
             ))}
           </div>
         </section>

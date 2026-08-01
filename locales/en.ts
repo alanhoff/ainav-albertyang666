@@ -36,8 +36,8 @@ const enTranslations = {
   sections: {
     browseCategories: "Browse Categories",
     featured: "Featured Picks",
-    viewAll: "View All",
-  },
+    viewAll: "View All",    showMore: "Show more",
+    showLess: "Show less",  },
   newsletter: {
     title: "Stay Updated with AI Innovations",
     description: "Get weekly updates on the latest AI tools, trends, and resources directly to your inbox.",
