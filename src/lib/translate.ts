@@ -196,7 +196,7 @@ export async function generateToolDetailContent({
   }
 
   try {
-    const prompt = `You are an AI tools expert writing content for an AI tools directory. Based on the tool information below, generate specific, factual "use cases" and "quick start steps" for this tool in Chinese (zh), English (en), Japanese (ja), Korean (ko), and French (fr).
+    const prompt = `You are an AI tools expert writing content for an AI tools directory. Based on the tool information below, generate rich, specific "use cases" and "quick start steps" for this tool in Chinese (zh), English (en), Japanese (ja), Korean (ko), and French (fr).
 
 Tool Name: ${name}
 Category: ${category}
@@ -205,19 +205,19 @@ Tags: ${tags.join(', ')}
 
 IMPORTANT: Respond ONLY with valid JSON in this exact format, no additional text:
 {
-  "zh": { "useCases": ["场景1", "场景2", "场景3", "场景4"], "quickStart": ["步骤1", "步骤2", "步骤3"] },
-  "en": { "useCases": ["...", "...", "...", "..."], "quickStart": ["...", "...", "..."] },
-  "ja": { "useCases": ["...", "...", "...", "..."], "quickStart": ["...", "...", "..."] },
-  "ko": { "useCases": ["...", "...", "...", "..."], "quickStart": ["...", "...", "..."] },
-  "fr": { "useCases": ["...", "...", "...", "..."], "quickStart": ["...", "...", "..."] }
+  "zh": { "useCases": ["场景1", "场景2", "场景3", "场景4", "场景5"], "quickStart": ["步骤1", "步骤2", "步骤3", "步骤4"] },
+  "en": { "useCases": ["...", "...", "...", "...", "..."], "quickStart": ["...", "...", "...", "..."] },
+  "ja": { "useCases": ["...", "...", "...", "...", "..."], "quickStart": ["...", "...", "...", "..."] },
+  "ko": { "useCases": ["...", "...", "...", "...", "..."], "quickStart": ["...", "...", "...", "..."] },
+  "fr": { "useCases": ["...", "...", "...", "...", "..."], "quickStart": ["...", "...", "...", "..."] }
 }
 
 Rules:
-1. useCases: exactly 4 items, each a concrete scenario SPECIFIC to this tool (who uses it, for what), 15-40 characters per item, no generic filler like "boost productivity"
-2. quickStart: exactly 3 steps, actionable and specific to how THIS tool is actually used (e.g. mention its actual workflow, input types, or platform)
-3. Only state facts that can be reasonably inferred from the name/description/tags — do NOT invent pricing, specific feature names, or statistics
-4. Keep brand names and technical terms in English where appropriate
-5. Each language version must be natural and fluent, not a literal translation`;
+1. useCases: exactly 5 items. Each item should be a concrete, specific scenario (who uses it, for what task, and what benefit they get). Length: 25-80 characters per item. Avoid generic filler like "boost productivity" or "save time".
+2. quickStart: exactly 4 steps. Each step should be actionable and specific to how THIS tool is actually used (e.g. mention signup, upload/enter input, choose a mode/feature, and get/download the result). Length: 25-80 characters per step.
+3. Only state facts that can be reasonably inferred from the name/description/tags — do NOT invent pricing, specific feature names, or statistics.
+4. Keep brand names and technical terms in English where appropriate.
+5. Each language version must be natural and fluent for native readers, not a literal word-by-word translation.`;
 
     const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
@@ -234,8 +234,8 @@ Rules:
           },
           { role: 'user', content: prompt },
         ],
-        temperature: 0.5,
-        max_tokens: 3000,
+        temperature: 0.6,
+        max_tokens: 4000,
       }),
     });
 
