@@ -144,6 +144,11 @@ const jaServices = {
   'coderplan': { name: 'CoderPlan', description: 'GPT-4o、Claude、Geminiなど100以上のAIモデルに統一アクセスできる、手頃なOpenAI互換APIリレーサービス。', tags: ["API","OpenAI","リレー","AIコーディング","開発ツール"] },
   'lockedin-ai': { name: 'LockedIn AI', description: '面接準備、履歴書最適化、キャリア計画をサポートするAIキャリア開発アシスタント。', tags: ["面接","キャリア","履歴書"] },
   'medally': { name: 'Medally', description: '会議メモ、タスク管理、チーム連携のためのスマート生産性ツール、会議サマリー自動生成機能付き。', tags: ["会議メモ","タスク管理","コラボレーション"] },
+  'saascity': {
+    name: 'SaaSCity',
+    description: 'ゲーム化された SaaS・AI プロダクトディレクトリ。掲載されたサービスはアイソメトリックな街の建物になります。',
+    tags: ["ディレクトリ","ローンチ","SaaS"],
+  },
 };
 
 export default jaServices;
