@@ -55,28 +55,30 @@ export async function GET() {
 
 /**
  * PATCH /api/admin/services
- * 更新 DB 中工具的翻译内容、状态或精选标记（仅适用于 tools 表中的工具）
- * body: { id, locale?, name?, description?, tags?, status?, featured? }
+ * 更新 DB 中工具的信息：翻译内容、状态、精选标记，或核心字段（category/pricing/url/language/logo）
+ * body: { id, locale?, name?, description?, tags?, status?, featured?, category?, pricing?, url?, language?, logo? }
  * - 更新翻译时需要 locale
  * - 仅更新 status/featured 时 locale 可选
+ * - 更新核心字段时 locale 不需要
  */
 export async function PATCH(request: NextRequest) {
   try {
     const unauthorized = await assertAdmin();
     if (unauthorized) return unauthorized;
 
-    const { id, locale, name, description, tags, status, featured } = await request.json();
+    const body = await request.json();
+    const { id, locale, name, description, tags, status, featured, category, pricing, url: toolUrl, language, logo } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Missing id' }, { status: 400 });
     }
 
-    // 不带 locale 时，允许仅更新 status 和/或 featured
-    const isFieldOnlyUpdate = (status !== undefined || featured !== undefined) && !locale;
+    const hasCoreFields = category !== undefined || pricing !== undefined || toolUrl !== undefined || language !== undefined || logo !== undefined;
+    const isFieldOnlyUpdate = (status !== undefined || featured !== undefined || hasCoreFields) && !locale;
     const isTranslationUpdate = locale !== undefined;
 
     if (!isFieldOnlyUpdate && !isTranslationUpdate) {
-      return NextResponse.json({ error: 'Must provide either locale (for translation), status or featured' }, { status: 400 });
+      return NextResponse.json({ error: 'Must provide either locale (for translation), status, featured, or core fields' }, { status: 400 });
     }
 
     const supabase = getSupabaseAdmin();
@@ -85,9 +87,8 @@ export async function PATCH(request: NextRequest) {
       updated_at: new Date().toISOString(),
     };
 
-    // 如果是翻译更新
+    // 翻译更新
     if (isTranslationUpdate) {
-      // Read current translations first
       const { data: row, error: fetchError } = await supabase
         .from('tools')
         .select('translations')
@@ -107,14 +108,31 @@ export async function PATCH(request: NextRequest) {
       updates.translations = updated;
     }
 
-    // 如果提供了 status，更新状态
+    // 状态
     if (typeof status === 'string') {
       updates.status = status;
     }
 
-    // 如果提供了 featured，更新精选标记
+    // 精选标记
     if (typeof featured === 'boolean') {
       updates.featured = featured;
+    }
+
+    // 核心字段
+    if (typeof category === 'string') {
+      updates.category = category;
+    }
+    if (pricing === 'free' || pricing === 'freemium' || pricing === 'paid') {
+      updates.pricing = pricing;
+    }
+    if (typeof toolUrl === 'string') {
+      updates.url = toolUrl;
+    }
+    if (Array.isArray(language)) {
+      updates.language = language;
+    }
+    if (typeof logo === 'string') {
+      updates.logo = logo;
     }
 
     const { data: updatedRows, error: updateError } = await supabase

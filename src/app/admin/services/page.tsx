@@ -13,13 +13,16 @@ import {
   Languages,
   Sparkles,
   X,
-  Save
+  Save,
+  Pencil
 } from 'lucide-react';
 import type { AIService } from '@/types';
+import categoriesBaseData from '@/../data/categories.json';
 
 const LOCALES = ['zh', 'en', 'ja', 'ko', 'fr'] as const;
 type Locale = typeof LOCALES[number];
 const LOCALE_LABELS: Record<Locale, string> = { zh: '中文', en: 'English', ja: '日本語', ko: '한국어', fr: 'Français' };
+const CATEGORY_LIST = categoriesBaseData.map(c => ({ id: c.id, icon: c.icon, name: c.id }));
 
 interface TranslationForm {
   name: string;
@@ -27,10 +30,28 @@ interface TranslationForm {
   tags: string; // 逗号分隔
 }
 
+interface CoreFieldsForm {
+  name: string;
+  description: string;
+  url: string;
+  logo: string;
+  category: string;
+  pricing: 'free' | 'freemium' | 'paid';
+  language: string; // 逗号分隔
+  featured: boolean;
+  status: 'active' | 'disabled';
+}
+
 interface EditState {
   serviceId: string;
   locale: Locale;
   form: TranslationForm;
+  saving: boolean;
+}
+
+interface CoreEditState {
+  service: AIService;
+  form: CoreFieldsForm;
   saving: boolean;
 }
 
@@ -43,6 +64,7 @@ export default function AdminServicesPage() {
   const [contentFilter, setContentFilter] = useState<'all' | 'generated' | 'missing'>('all');
   const [loading, setLoading] = useState(true);
   const [editState, setEditState] = useState<EditState | null>(null);
+  const [coreEditState, setCoreEditState] = useState<CoreEditState | null>(null);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [contentIds, setContentIds] = useState<Set<string>>(new Set());
   const [generatingId, setGeneratingId] = useState<string | null>(null);
@@ -181,7 +203,62 @@ export default function AdminServicesPage() {
       },
       saving: false,
     });
+    setCoreEditState(null);
     setSaveMsg(null);
+  };
+
+  const openCoreEdit = (service: AIService) => {
+    setCoreEditState({
+      service,
+      form: {
+        name: service.name || '',
+        description: service.description || '',
+        url: service.url || '',
+        logo: service.logo || '',
+        category: service.category || '',
+        pricing: service.pricing || 'freemium',
+        language: (service.language || []).join(', '),
+        featured: service.featured || false,
+        status: (service as AIService & { status?: 'active' | 'disabled' }).status || 'active',
+      },
+      saving: false,
+    });
+    setEditState(null);
+    setSaveMsg(null);
+  };
+
+  const saveCoreFields = async () => {
+    if (!coreEditState) return;
+    setCoreEditState(prev => prev ? { ...prev, saving: true } : null);
+    try {
+      const res = await fetch('/api/admin/services', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: coreEditState.service.id,
+          name: coreEditState.form.name,
+          description: coreEditState.form.description,
+          url: coreEditState.form.url,
+          logo: coreEditState.form.logo || null,
+          category: coreEditState.form.category,
+          pricing: coreEditState.form.pricing,
+          language: coreEditState.form.language.split(',').map(l => l.trim()).filter(Boolean),
+          featured: coreEditState.form.featured,
+          status: coreEditState.form.status,
+        }),
+      });
+      if (res.ok) {
+        setSaveMsg('保存成功！页面缓存已刷新。');
+        await fetchServices();
+      } else {
+        const data = await res.json();
+        setSaveMsg(`保存失败：${data.error || '未知错误'}（仅支持写入数据库中的工具）`);
+      }
+    } catch {
+      setSaveMsg('保存失败，请重试');
+    } finally {
+      setCoreEditState(prev => prev ? { ...prev, saving: false } : null);
+    }
   };
 
   const saveTranslation = async () => {
@@ -214,7 +291,8 @@ export default function AdminServicesPage() {
   };
 
   // 获取所有分类
-  const categories = [...new Set(services.map((s) => s.category))];
+  const categoryList = CATEGORY_LIST;
+  const categories = categoryList.map(c => c.id);
 
   // 筛选服务
   const filteredServices = services.filter((service) => {
@@ -452,6 +530,13 @@ export default function AdminServicesPage() {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-1">
+                      <button
+                        onClick={() => openCoreEdit(service)}
+                        className="inline-flex items-center justify-center p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
+                        title="编辑工具信息"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
                       {/* AI 生成详情内容 */}
                       <button
                         onClick={() => generateContent(service.id)}
@@ -570,6 +655,13 @@ export default function AdminServicesPage() {
                    </div>
                 </div>
                 <div className="flex gap-1">
+                  <button
+                    onClick={() => openCoreEdit(service)}
+                    className="inline-flex items-center justify-center p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
+                    title="编辑工具信息"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
                   {LOCALES.map(locale => (
                     <button
                       key={locale}
@@ -673,6 +765,148 @@ export default function AdminServicesPage() {
           </p>
         </div>
       </div>
+
+      {/* 核心信息编辑弹窗 */}
+      {coreEditState && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl border border-gray-200 dark:border-gray-700 my-8">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <Pencil className="w-5 h-5 text-blue-600" />
+                编辑工具信息
+              </h2>
+              <button
+                onClick={() => setCoreEditState(null)}
+                className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                工具 ID：<code className="font-mono bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded">{coreEditState.service.id}</code>
+                <span className="ml-2 text-amber-600 dark:text-amber-400">仅支持写入数据库中的工具</span>
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">名称</label>
+                  <input
+                    type="text"
+                    value={coreEditState.form.name}
+                    onChange={e => setCoreEditState(prev => prev ? { ...prev, form: { ...prev.form, name: e.target.value } } : null)}
+                    className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">URL</label>
+                  <input
+                    type="text"
+                    value={coreEditState.form.url}
+                    onChange={e => setCoreEditState(prev => prev ? { ...prev, form: { ...prev.form, url: e.target.value } } : null)}
+                    className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">描述</label>
+                  <textarea
+                    rows={3}
+                    value={coreEditState.form.description}
+                    onChange={e => setCoreEditState(prev => prev ? { ...prev, form: { ...prev.form, description: e.target.value } } : null)}
+                    className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">分类</label>
+                  <select
+                    value={coreEditState.form.category}
+                    onChange={e => setCoreEditState(prev => prev ? { ...prev, form: { ...prev.form, category: e.target.value } } : null)}
+                    className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    {categoryList.map(cat => (
+                      <option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">定价</label>
+                  <select
+                    value={coreEditState.form.pricing}
+                    onChange={e => setCoreEditState(prev => prev ? { ...prev, form: { ...prev.form, pricing: e.target.value as 'free' | 'freemium' | 'paid' } } : null)}
+                    className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="free">免费</option>
+                    <option value="freemium">免费增值</option>
+                    <option value="paid">付费</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Logo URL</label>
+                  <input
+                    type="text"
+                    value={coreEditState.form.logo}
+                    onChange={e => setCoreEditState(prev => prev ? { ...prev, form: { ...prev.form, logo: e.target.value } } : null)}
+                    className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">语言（逗号分隔，如 en,zh）</label>
+                  <input
+                    type="text"
+                    value={coreEditState.form.language}
+                    onChange={e => setCoreEditState(prev => prev ? { ...prev, form: { ...prev.form, language: e.target.value } } : null)}
+                    className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-6 pt-2">
+                <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                  <input
+                    type="checkbox"
+                    checked={coreEditState.form.featured}
+                    onChange={e => setCoreEditState(prev => prev ? { ...prev, form: { ...prev.form, featured: e.target.checked } } : null)}
+                    className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  精选推荐
+                </label>
+                <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                  <input
+                    type="checkbox"
+                    checked={coreEditState.form.status === 'active'}
+                    onChange={e => setCoreEditState(prev => prev ? { ...prev, form: { ...prev.form, status: e.target.checked ? 'active' : 'disabled' } } : null)}
+                    className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  已启用
+                </label>
+              </div>
+              {saveMsg && (
+                <p className={`text-sm rounded-lg px-3 py-2 ${saveMsg.includes('成功') ? 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
+                  {saveMsg}
+                </p>
+              )}
+            </div>
+            <div className="flex gap-3 px-6 py-4 border-t border-gray-100 dark:border-gray-700">
+              <button
+                onClick={() => setCoreEditState(null)}
+                className="flex-1 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={saveCoreFields}
+                disabled={coreEditState.saving}
+                className="flex-1 px-4 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg transition-colors flex items-center justify-center gap-2"
+              >
+                {coreEditState.saving ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+                保存并刷新缓存
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 翻译编辑弹窗 */}
       {editState && (
