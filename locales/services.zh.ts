@@ -484,6 +484,11 @@ const zhServices = {
     description: '会议记录、任务管理和团队协作的智能生产力工具，自动生成会议摘要和行动项。',
     tags: ["会议记录","任务管理","团队协作"],
   },
+  'saascity': {
+    name: 'SaaSCity',
+    description: '游戏化的 SaaS 与 AI 产品目录，每个收录都会成为等距城市地图上的一栋建筑。',
+    tags: ["目录","发布","SaaS"],
+  },
 };
 
 export default zhServices;
