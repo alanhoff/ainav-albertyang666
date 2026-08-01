@@ -1,9 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { sendNewToolSubmissionEmail } from '@/lib/email';
+import { checkRateLimit, getClientIP, hashIP, isValidEmail } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
   try {
+    // 速率限制（5 次/小时），防止刷库和邮件轰炸
+    const ipHash = hashIP(getClientIP(request));
+    if (!checkRateLimit(`submit:${ipHash}`, 5, 3600000)) {
+      return NextResponse.json(
+        { error: '提交过于频繁，请稍后再试' },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
     const { name, url, description, category, pricing, tags, submitter_email } = body;
 
@@ -15,12 +25,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 验证 URL 格式
+    // 字段类型与长度限制
+    if (
+      typeof name !== 'string' || name.length > 100 ||
+      typeof url !== 'string' || url.length > 500 ||
+      typeof description !== 'string' || description.length > 2000 ||
+      typeof category !== 'string' || category.length > 50
+    ) {
+      return NextResponse.json(
+        { error: '字段内容过长或格式不正确' },
+        { status: 400 }
+      );
+    }
+
+    // 验证 URL 格式（仅允许 http/https）
     try {
-      new URL(url);
+      const parsed = new URL(url);
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+        throw new Error('invalid protocol');
+      }
     } catch {
       return NextResponse.json(
         { error: '请输入有效的网址' },
+        { status: 400 }
+      );
+    }
+
+    // 验证邮箱格式（可选字段）
+    if (submitter_email && !isValidEmail(submitter_email)) {
+      return NextResponse.json(
+        { error: '请输入有效的邮箱地址' },
         { status: 400 }
       );
     }
@@ -36,7 +70,7 @@ export async function POST(request: NextRequest) {
         description,
         category,
         pricing: pricing || 'freemium',
-        tags: tags || null,
+        tags: typeof tags === 'string' ? tags.slice(0, 500) : null,
         submitter_email: submitter_email || null,
         status: 'pending',
       })

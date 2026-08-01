@@ -252,8 +252,14 @@ export default function ResendEmailHistory() {
               {selectedEmail.html && (
                 <div>
                   <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">邮件内容预览</label>
-                  <div className="mt-2 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg max-h-96 overflow-y-auto">
-                    <div dangerouslySetInnerHTML={{ __html: selectedEmail.html }} />
+                  <div className="mt-2 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-600">
+                    {/* 沙箱 iframe 隔离邮件 HTML，防止 XSS */}
+                    <iframe
+                      sandbox=""
+                      srcDoc={selectedEmail.html}
+                      title="邮件内容预览"
+                      className="w-full h-96 bg-white"
+                    />
                   </div>
                 </div>
               )}

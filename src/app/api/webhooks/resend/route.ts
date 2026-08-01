@@ -25,20 +25,18 @@ export async function POST(request: Request) {
     const webhookId = request.headers.get('svix-id');
 
     // Verify webhook signature if secret is configured.
-    // NOTE: signature verification requires the 'svix' package. If it's not installed,
-    // fallback to parsing the body directly. For production, install 'svix' and
-    // set RESEND_WEBHOOK_SECRET to enable verification.
     const webhookSecret = process.env.RESEND_WEBHOOK_SECRET;
     const body = await request.text();
 
     let payload: ResendWebhookEvent;
 
-    if (webhookSecret && signature && timestamp && webhookId) {
-      // Attempt to verify using svix only if available at runtime.
+    if (webhookSecret) {
+      // 配置了密钥时严格验证：缺少头或验证失败一律拒绝，防止伪造事件
+      if (!signature || !timestamp || !webhookId) {
+        return NextResponse.json({ error: 'Missing webhook signature headers' }, { status: 401 });
+      }
       try {
-        // Dynamically require svix to avoid build-time dependency.
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const { Webhook } = require('svix') as { Webhook: new (secret: string) => { verify: (body: string, headers: Record<string, string>) => unknown } };
+        const { Webhook } = await import('svix');
         const wh = new Webhook(webhookSecret);
         payload = wh.verify(body, {
           'svix-id': webhookId,
@@ -46,11 +44,12 @@ export async function POST(request: Request) {
           'svix-signature': signature,
         }) as ResendWebhookEvent;
       } catch (err) {
-        console.warn('svix not available or verification failed, falling back to parsing body. Error:', err);
-        payload = JSON.parse(body) as ResendWebhookEvent;
+        console.warn('Webhook signature verification failed:', err);
+        return NextResponse.json({ error: 'Invalid webhook signature' }, { status: 401 });
       }
     } else {
-      // No secret configured or missing headers — parse body directly (development mode)
+      // No secret configured — parse body directly (development mode)
+      console.warn('RESEND_WEBHOOK_SECRET not set; accepting unverified webhook (dev only)');
       payload = JSON.parse(body) as ResendWebhookEvent;
     }
 

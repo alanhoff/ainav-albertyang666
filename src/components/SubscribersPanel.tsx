@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Users, Download, RefreshCw, Send, Trash2, Calendar, Globe } from 'lucide-react';
+import { useToast } from '@/components/ToastProvider';
 
 interface Subscriber {
   id: string;
@@ -15,6 +16,7 @@ interface Subscriber {
 }
 
 export default function SubscribersPanel() {
+  const toast = useToast();
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEmails, setSelectedEmails] = useState<string[]>([]);
@@ -88,7 +90,7 @@ export default function SubscribersPanel() {
 
   const handleSendToSelected = () => {
     if (selectedEmails.length === 0) {
-      alert('请先选择订阅者');
+      toast.warning('请先选择订阅者');
       return;
     }
     // Navigate to email campaign page with selected emails

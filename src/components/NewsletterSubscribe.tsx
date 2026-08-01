@@ -26,7 +26,7 @@ export default function NewsletterSubscribe({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email || !email.includes('@')) {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
       setStatus('error');
       setToast({
         message: 'Please enter a valid email address',

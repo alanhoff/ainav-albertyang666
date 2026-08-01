@@ -5,7 +5,14 @@ import Credentials from 'next-auth/providers/credentials';
 import type { Provider } from 'next-auth/providers';
 
 // 管理员邮箱列表
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim());
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean);
+
+// 开发环境的测试管理员邮箱，生产环境绝不能生效
+const DEV_ADMIN_EMAIL = process.env.NODE_ENV === 'development' ? 'admin@example.com' : null;
+
+function isAdminEmail(email: string): boolean {
+  return ADMIN_EMAILS.includes(email) || email === DEV_ADMIN_EMAIL;
+}
 
 // 动态构建 providers 列表
 const providers: Provider[] = [];
@@ -97,13 +104,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   callbacks: {
     // 登录成功后的重定向
-    async signIn({ user }) {
-      // 检查是否是管理员
-      if (user?.email && (ADMIN_EMAILS.includes(user.email) || user.email === 'admin@example.com')) {
-        // 管理员登录成功，标记为管理员
-        return true;
-      }
-      // 普通用户也允许登录
+    async signIn() {
+      // 普通用户与管理员均允许登录，角色在 jwt 回调中判定
       return true;
     },
     // 重定向回调
@@ -118,7 +120,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     // 添加用户角色到 session
     async jwt({ token, user }) {
       if (user?.email) {
-        token.isAdmin = ADMIN_EMAILS.includes(user.email) || user.email === 'admin@example.com';
+        token.isAdmin = isAdminEmail(user.email);
         token.email = user.email;
       }
       return token;

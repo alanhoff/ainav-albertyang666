@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { Send, Mail, CheckCircle, XCircle, Users } from 'lucide-react';
+import { useToast } from '@/components/ToastProvider';
 
 export default function EmailCampaignPanel() {
+  const toast = useToast();
   const [emails, setEmails] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingSubscribers, setLoadingSubscribers] = useState(false);
@@ -51,7 +53,7 @@ export default function EmailCampaignPanel() {
       }
     } catch (error) {
       console.error('Failed to load subscribers:', error);
-      alert('加载订阅者失败');
+      toast.error('加载订阅者失败');
     } finally {
       setLoadingSubscribers(false);
     }

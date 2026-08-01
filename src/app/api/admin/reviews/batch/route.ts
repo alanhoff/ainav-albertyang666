@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { assertAdmin } from '@/lib/admin-auth';
 
 // POST - 批量操作
 export async function POST(request: NextRequest) {
+  const unauthorized = await assertAdmin();
+  if (unauthorized) return unauthorized;
+
   try {
     const body = await request.json();
     const { action } = body;

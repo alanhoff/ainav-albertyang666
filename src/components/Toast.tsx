@@ -52,6 +52,8 @@ export default function Toast({ message, type = 'info', duration = 3000, onClose
         ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}
       `}
       role="alert"
+      aria-live="polite"
+      aria-atomic="true"
     >
       <span className="text-lg font-bold">{icons[type]}</span>
       <span className="text-sm font-medium">{message}</span>

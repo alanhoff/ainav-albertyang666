@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { sendReviewModerationEmail } from '@/lib/email';
 import { getAIServiceById } from '@/lib/data';
+import { checkRateLimit, getClientIP, hashIP } from '@/lib/rate-limit';
 
 interface ReviewSubmission {
   service_id: string;
@@ -12,60 +13,14 @@ interface ReviewSubmission {
   language?: string;
 }
 
-// 获取真实客户端 IP
-function getClientIP(request: NextRequest): string {
-  // Vercel 提供的真实 IP 头
-  const forwarded = request.headers.get('x-forwarded-for');
-  const realIP = request.headers.get('x-real-ip');
-  const vercelIP = request.headers.get('x-vercel-forwarded-for');
-  
-  return (
-    vercelIP ||
-    forwarded?.split(',')[0].trim() ||
-    realIP ||
-    'unknown'
-  );
-}
-
-// 简单的速率限制（内存存储，适合 Serverless）
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-
-function checkRateLimit(ip: string, maxRequests = 5, windowMs = 3600000): boolean {
-  const now = Date.now();
-  const record = rateLimitMap.get(ip);
-
-  if (!record || now > record.resetTime) {
-    rateLimitMap.set(ip, { count: 1, resetTime: now + windowMs });
-    return true;
-  }
-
-  if (record.count >= maxRequests) {
-    return false;
-  }
-
-  record.count++;
-  return true;
-}
-
-// 简单的哈希函数
-function hashString(str: string): string {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return Math.abs(hash).toString(16);
-}
-
 export async function POST(request: NextRequest) {
   try {
     // 1. 获取客户端 IP
     const clientIP = getClientIP(request);
-    const ipHash = hashString(clientIP);
+    const ipHash = hashIP(clientIP);
 
-    // 2. 速率限制检查
-    if (!checkRateLimit(ipHash)) {
+    // 2. 速率限制检查（5 次/小时）
+    if (!checkRateLimit(`review:${ipHash}`, 5, 3600000)) {
       return NextResponse.json(
         { error: 'Too many requests. Please try again later.' },
         { status: 429 }

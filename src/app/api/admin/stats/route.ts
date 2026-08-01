@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { getAllAIServices } from '@/lib/data';
+import { assertAdmin } from '@/lib/admin-auth';
 
 export async function GET() {
+  const unauthorized = await assertAdmin();
+  if (unauthorized) return unauthorized;
+
   try {
     const supabase = getSupabaseAdmin();
     

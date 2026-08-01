@@ -47,9 +47,14 @@ export default async function LangLayout({
     notFound();
   }
   const dictionary = getDictionary(lang as Locale);
+  const htmlLang = ({ zh: 'zh-CN', en: 'en', ja: 'ja', ko: 'ko', fr: 'fr' } as Record<string, string>)[lang] || 'en';
 
   return (
     <BookmarkProvider>
+      {/* 根布局无法获取路由参数，用内联脚本在解析时修正 html lang（SEO/屏幕阅读器） */}
+      <script
+        dangerouslySetInnerHTML={{ __html: `document.documentElement.lang=${JSON.stringify(htmlLang)}` }}
+      />
       <CompareProvider>
         <div className="min-h-screen bg-gray-50 dark:bg-gray-950 font-sans selection:bg-blue-100 selection:text-blue-900 dark:selection:bg-blue-900 dark:selection:text-blue-100">
           <header className="sticky top-0 z-50 w-full border-b border-gray-200/50 dark:border-gray-800/50 bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl supports-[backdrop-filter]:bg-white/60">

@@ -2,13 +2,14 @@ import { NextResponse } from 'next/server';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { headers } from 'next/headers';
 import crypto from 'crypto';
+import { checkRateLimit, isValidEmail } from '@/lib/rate-limit';
 
 export async function POST(request: Request) {
   try {
     const { email, source = 'homepage', language = 'en' } = await request.json();
 
     // Validate email
-    if (!email || !email.includes('@')) {
+    if (!isValidEmail(email)) {
       return NextResponse.json(
         { error: 'Invalid email address' },
         { status: 400 }
@@ -20,6 +21,14 @@ export async function POST(request: Request) {
     const forwarded = headersList.get('x-forwarded-for');
     const ip = forwarded ? forwarded.split(',')[0] : headersList.get('x-real-ip') || 'unknown';
     const ipHash = crypto.createHash('sha256').update(ip).digest('hex');
+
+    // 速率限制（10 次/小时），防止批量灌入垃圾订阅
+    if (!checkRateLimit(`subscribe:${ipHash}`, 10, 3600000)) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      );
+    }
 
     // Use admin client to check existing subscribers (bypasses RLS)
     const adminClient = await createAdminClient();

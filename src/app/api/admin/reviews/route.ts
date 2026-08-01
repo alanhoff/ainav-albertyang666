@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { assertAdmin } from '@/lib/admin-auth';
 
 // GET - 获取评论列表
 export async function GET(request: NextRequest) {
-  // 暂时跳过验证，方便本地测试
-  // if (!isAdmin(request)) {
-  //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  // }
+  const unauthorized = await assertAdmin();
+  if (unauthorized) return unauthorized;
 
   const status = request.nextUrl.searchParams.get('status') || 'pending';
   
@@ -38,6 +37,9 @@ export async function GET(request: NextRequest) {
 
 // PATCH - 批准或拒绝评论
 export async function PATCH(request: NextRequest) {
+  const unauthorized = await assertAdmin();
+  if (unauthorized) return unauthorized;
+
   try {
     const body = await request.json();
     const { review_id, action, reason } = body;
@@ -96,6 +98,9 @@ export async function PATCH(request: NextRequest) {
 
 // DELETE - 删除评论
 export async function DELETE(request: NextRequest) {
+  const unauthorized = await assertAdmin();
+  if (unauthorized) return unauthorized;
+
   try {
     const body = await request.json();
     const { review_id } = body;

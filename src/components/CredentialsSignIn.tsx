@@ -3,16 +3,18 @@
 import { signIn } from 'next-auth/react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/components/ToastProvider';
 
 interface CredentialsSignInProps {
   callbackUrl: string;
 }
 
 export default function CredentialsSignIn({ callbackUrl }: CredentialsSignInProps) {
-  const [email, setEmail] = useState('admin@example.com');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const toast = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +28,7 @@ export default function CredentialsSignIn({ callbackUrl }: CredentialsSignInProp
       });
 
       if (result?.error) {
-        alert('登录失败: ' + result.error);
+        toast.error('登录失败，请检查邮箱和密码');
         setIsLoading(false);
       } else if (result?.ok) {
         // Login successful, redirect to callback URL
@@ -35,7 +37,7 @@ export default function CredentialsSignIn({ callbackUrl }: CredentialsSignInProp
       }
     } catch (error) {
       console.error('Login error:', error);
-      alert('登录过程中出现错误');
+      toast.error('登录过程中出现错误');
       setIsLoading(false);
     }
   };

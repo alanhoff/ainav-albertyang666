@@ -371,19 +371,23 @@ export default function ReviewSection({ serviceId, locale }: ReviewSectionProps)
             <button
               onClick={() => setPage(Math.max(1, page - 1))}
               disabled={page === 1}
+              aria-label={dict.reviews?.pagination?.previous ?? 'Previous'}
               className="px-4 py-2 border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700"
             >
-              Previous
+              {dict.reviews?.pagination?.previous ?? 'Previous'}
             </button>
-            <span className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">
-              Page {page} of {Math.ceil(data.total / 10)}
+            <span aria-live="polite" className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">
+              {dict.reviews?.pagination?.pageInfo
+                ? dict.reviews.pagination.pageInfo(page, Math.ceil(data.total / 10))
+                : `Page ${page} of ${Math.ceil(data.total / 10)}`}
             </span>
             <button
               onClick={() => setPage(page + 1)}
               disabled={page >= Math.ceil(data.total / 10)}
+              aria-label={dict.reviews?.pagination?.next ?? 'Next'}
               className="px-4 py-2 border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700"
             >
-              Next
+              {dict.reviews?.pagination?.next ?? 'Next'}
             </button>
           </div>
         )}

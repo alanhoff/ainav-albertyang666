@@ -3,9 +3,13 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { revalidateTag } from 'next/cache';
 import { sendToolApprovedEmail, sendToolRejectedEmail } from '@/lib/email';
 import { translateToolContent, createFallbackTranslations } from '@/lib/translate';
+import { assertAdmin } from '@/lib/admin-auth';
 
 // Fetch submission list
 export async function GET(request: NextRequest) {
+  const unauthorized = await assertAdmin();
+  if (unauthorized) return unauthorized;
+
   try {
     const supabase = getSupabaseAdmin();
     const { searchParams } = new URL(request.url);
@@ -42,6 +46,9 @@ export async function GET(request: NextRequest) {
 
 // Update submission status
 export async function PATCH(request: NextRequest) {
+  const unauthorized = await assertAdmin();
+  if (unauthorized) return unauthorized;
+
   try {
     const supabase = getSupabaseAdmin();
     const body = await request.json();

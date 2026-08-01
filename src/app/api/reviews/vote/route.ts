@@ -1,30 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-
-// 获取真实客户端 IP
-function getClientIP(request: NextRequest): string {
-  const forwarded = request.headers.get('x-forwarded-for');
-  const realIP = request.headers.get('x-real-ip');
-  const vercelIP = request.headers.get('x-vercel-forwarded-for');
-  
-  return (
-    vercelIP ||
-    forwarded?.split(',')[0].trim() ||
-    realIP ||
-    'unknown'
-  );
-}
-
-// 简单的哈希函数
-function hashString(str: string): string {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return Math.abs(hash).toString(16);
-}
+import { checkRateLimit, getClientIP, hashIP } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
   try {
@@ -46,7 +22,15 @@ export async function POST(request: NextRequest) {
     }
 
     const clientIP = getClientIP(request);
-    const ipHash = hashString(clientIP);
+    const ipHash = hashIP(clientIP);
+
+    // 速率限制（30 次/小时）
+    if (!checkRateLimit(`vote:${ipHash}`, 30, 3600000)) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      );
+    }
 
     const supabase = getSupabaseAdmin();
 
