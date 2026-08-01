@@ -39,6 +39,7 @@ export default function AdminServicesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'disabled'>('all');
+  const [featuredFilter, setFeaturedFilter] = useState<'all' | 'featured' | 'not_featured'>('all');
   const [contentFilter, setContentFilter] = useState<'all' | 'generated' | 'missing'>('all');
   const [loading, setLoading] = useState(true);
   const [editState, setEditState] = useState<EditState | null>(null);
@@ -221,13 +222,14 @@ export default function AdminServicesPage() {
       service.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       service.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = categoryFilter === 'all' || service.category === categoryFilter;
-    // JSON 基线工具无 status 字段，视为 active
     const effectiveStatus = (service as AIService & { status?: string }).status || 'active';
     const matchesStatus = statusFilter === 'all'
       || (statusFilter === 'active' ? effectiveStatus === 'active' : effectiveStatus !== 'active');
+    const matchesFeatured = featuredFilter === 'all'
+      || (featuredFilter === 'featured' ? service.featured : !service.featured);
     const matchesContent = contentFilter === 'all'
       || (contentFilter === 'generated' ? contentIds.has(service.id) : !contentIds.has(service.id));
-    return matchesSearch && matchesCategory && matchesStatus && matchesContent;
+    return matchesSearch && matchesCategory && matchesStatus && matchesFeatured && matchesContent;
   });
 
   if (loading) {
@@ -325,6 +327,23 @@ export default function AdminServicesPage() {
             <option value="all">所有状态</option>
             <option value="active">✅ 已启用</option>
             <option value="disabled">🚫 已禁用</option>
+          </select>
+          <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+          </div>
+        </div>
+        <div className="h-px w-full sm:h-10 sm:w-px bg-gray-100 dark:bg-gray-700" />
+        {/* 精选筛选 */}
+        <div className="relative min-w-[140px]">
+          <select
+            value={featuredFilter}
+            onChange={(e) => setFeaturedFilter(e.target.value as 'all' | 'featured' | 'not_featured')}
+            className="w-full pl-4 pr-8 py-2.5 bg-transparent border-none text-gray-900 dark:text-white appearance-none cursor-pointer focus:outline-none focus:ring-0"
+            style={{ backgroundImage: 'none' }}
+          >
+            <option value="all">所有精选状态</option>
+            <option value="featured">⭐ 已精选</option>
+            <option value="not_featured">未精选</option>
           </select>
           <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>

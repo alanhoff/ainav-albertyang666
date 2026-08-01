@@ -79,6 +79,10 @@ export type Dictionary = {
       allCategories: string;
       pricing: string;
       allPricing: string;
+      featured: string;
+      allFeatured: string;
+      featuredOnly: string;
+      notFeatured: string;
       sortBy: string;
       defaultSort: string;
       relevance: string;

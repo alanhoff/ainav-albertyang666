@@ -13,6 +13,7 @@ const PAGE_SIZE = TOOLS_PAGE_SIZE;
 
 type SortOption = 'default' | 'rating' | 'reviewCount' | 'nameAsc' | 'nameDesc';
 type PricingFilter = 'all' | 'free' | 'freemium' | 'paid';
+type FeaturedFilter = 'all' | 'featured' | 'not_featured';
 
 export const revalidate = 3600;
 
@@ -26,7 +27,7 @@ export function generateStaticParams() {
   return params;
 }
 
-export async function generateMetadata({ params, searchParams }: { params: Promise<{ lang: Locale; page: string }>; searchParams?: Promise<{ category?: string; pricing?: string; sort?: string }> }): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: { params: Promise<{ lang: Locale; page: string }>; searchParams?: Promise<{ category?: string; pricing?: string; sort?: string; featured?: string }> }): Promise<Metadata> {
   const { lang, page } = await params;
   const query = await searchParams;
   const dictionary = getDictionary(lang);
@@ -38,6 +39,9 @@ export async function generateMetadata({ params, searchParams }: { params: Promi
   }
   if (query?.pricing && query.pricing !== 'all') {
     searchParamsEntries.set('pricing', query.pricing);
+  }
+  if (query?.featured && query.featured !== 'all') {
+    searchParamsEntries.set('featured', query.featured);
   }
   if (query?.sort && query.sort !== 'default') {
     searchParamsEntries.set('sort', query.sort);
@@ -52,7 +56,7 @@ export async function generateMetadata({ params, searchParams }: { params: Promi
   });
 }
 
-export default async function ToolsPageByNumber({ params, searchParams }: { params: Promise<{ lang: Locale; page: string }>; searchParams?: Promise<{ category?: string; pricing?: string; sort?: string }> }) {
+export default async function ToolsPageByNumber({ params, searchParams }: { params: Promise<{ lang: Locale; page: string }>; searchParams?: Promise<{ category?: string; pricing?: string; sort?: string; featured?: string }> }) {
   const { lang, page } = await params;
   const query = await searchParams;
   const dictionary = getDictionary(lang);
@@ -65,6 +69,7 @@ export default async function ToolsPageByNumber({ params, searchParams }: { para
 
   const selectedCategory = query?.category || 'all';
   const selectedPricing = (query?.pricing === 'free' || query?.pricing === 'freemium' || query?.pricing === 'paid' ? query.pricing : 'all') as PricingFilter;
+  const selectedFeatured = (query?.featured === 'featured' || query?.featured === 'not_featured' ? query.featured : 'all') as FeaturedFilter;
   const selectedSort = (query?.sort === 'rating' || query?.sort === 'reviewCount' || query?.sort === 'nameAsc' || query?.sort === 'nameDesc' ? query.sort : 'default') as SortOption;
 
   let filteredServices = [...allServices];
@@ -73,6 +78,9 @@ export default async function ToolsPageByNumber({ params, searchParams }: { para
   }
   if (selectedPricing !== 'all') {
     filteredServices = filteredServices.filter((service) => service.pricing === selectedPricing);
+  }
+  if (selectedFeatured !== 'all') {
+    filteredServices = filteredServices.filter((service) => (selectedFeatured === 'featured' ? service.featured : !service.featured));
   }
 
   if (selectedSort !== 'default') {
@@ -153,6 +161,7 @@ export default async function ToolsPageByNumber({ params, searchParams }: { para
           ratings={ratings}
           currentCategory={selectedCategory}
           currentPricing={selectedPricing}
+          currentFeatured={selectedFeatured}
           currentSort={selectedSort}
           currentPage={currentPage}
           totalPages={totalPages}

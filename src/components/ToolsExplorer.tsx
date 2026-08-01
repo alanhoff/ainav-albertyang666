@@ -11,6 +11,7 @@ import type { AIService, Category } from '@/types';
 type RatingData = { average_score: number; review_count: number };
 type SortOption = 'default' | 'rating' | 'reviewCount' | 'nameAsc' | 'nameDesc';
 type PricingFilter = 'all' | 'free' | 'freemium' | 'paid';
+type FeaturedFilter = 'all' | 'featured' | 'not_featured';
 
 interface ToolsExplorerProps {
   locale: Locale;
@@ -19,13 +20,14 @@ interface ToolsExplorerProps {
   ratings: Record<string, RatingData>;
   currentCategory: string;
   currentPricing: PricingFilter;
+  currentFeatured: FeaturedFilter;
   currentSort: SortOption;
   currentPage: number;
   totalPages: number;
   totalCount: number;
 }
 
-export default function ToolsExplorer({ locale, services, categories, ratings, currentCategory, currentPricing, currentSort, currentPage, totalPages, totalCount }: ToolsExplorerProps) {
+export default function ToolsExplorer({ locale, services, categories, ratings, currentCategory, currentPricing, currentFeatured, currentSort, currentPage, totalPages, totalCount }: ToolsExplorerProps) {
   const dictionary = getDictionary(locale);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -63,6 +65,9 @@ export default function ToolsExplorer({ locale, services, categories, ratings, c
     currentCategory !== 'all' ? selectedCategoryName : null,
     currentPricing !== 'all'
       ? (currentPricing === 'free' ? dictionary.pricing.free : currentPricing === 'freemium' ? dictionary.pricing.freemium : dictionary.pricing.paid)
+      : null,
+    currentFeatured !== 'all'
+      ? (currentFeatured === 'featured' ? dictionary.search.filters.featuredOnly : dictionary.search.filters.allFeatured)
       : null,
     currentSort !== 'default'
       ? (currentSort === 'rating'
@@ -151,7 +156,7 @@ export default function ToolsExplorer({ locale, services, categories, ratings, c
           </div>
         </div>
 
-        <div className="mt-4 grid gap-3 md:grid-cols-3">
+        <div className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <div>
             <label className={labelClass}>{dictionary.search.filters.category}</label>
             <select
@@ -183,6 +188,21 @@ export default function ToolsExplorer({ locale, services, categories, ratings, c
               <option value="free">{dictionary.pricing.free}</option>
               <option value="freemium">{dictionary.pricing.freemium}</option>
               <option value="paid">{dictionary.pricing.paid}</option>
+            </select>
+          </div>
+
+          <div>
+            <label className={labelClass}>{dictionary.search.filters.featured}</label>
+            <select
+              value={currentFeatured}
+              onChange={(e) => {
+                router.push(buildFilterHref({ featured: e.target.value }));
+              }}
+              className={selectClass}
+            >
+              <option value="all">{dictionary.search.filters.allFeatured}</option>
+              <option value="featured">{dictionary.search.filters.featuredOnly}</option>
+              <option value="not_featured">{dictionary.search.filters.notFeatured}</option>
             </select>
           </div>
 

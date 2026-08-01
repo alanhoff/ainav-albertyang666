@@ -12,6 +12,7 @@ const PAGE_SIZE = TOOLS_PAGE_SIZE;
 
 type SortOption = 'default' | 'rating' | 'reviewCount' | 'nameAsc' | 'nameDesc';
 type PricingFilter = 'all' | 'free' | 'freemium' | 'paid';
+type FeaturedFilter = 'all' | 'featured' | 'not_featured';
 
 export const revalidate = 3600;
 
@@ -19,7 +20,7 @@ export function generateStaticParams() {
   return locales.map((lang) => ({ lang }));
 }
 
-export async function generateMetadata({ params, searchParams }: { params: Promise<{ lang: Locale }>; searchParams?: Promise<{ category?: string; pricing?: string; sort?: string }> }): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: { params: Promise<{ lang: Locale }>; searchParams?: Promise<{ category?: string; pricing?: string; sort?: string; featured?: string }> }): Promise<Metadata> {
   const { lang } = await params;
   const query = await searchParams;
   const dictionary = getDictionary(lang);
@@ -34,6 +35,9 @@ export async function generateMetadata({ params, searchParams }: { params: Promi
   if (query?.sort && query.sort !== 'default') {
     searchParamsEntries.set('sort', query.sort);
   }
+  if (query?.featured && query.featured !== 'all') {
+    searchParamsEntries.set('featured', query.featured);
+  }
 
   const queryString = searchParamsEntries.toString();
 
@@ -45,7 +49,7 @@ export async function generateMetadata({ params, searchParams }: { params: Promi
   });
 }
 
-export default async function AllToolsPage({ params, searchParams }: { params: Promise<{ lang: Locale }>; searchParams?: Promise<{ category?: string; pricing?: string; sort?: string }> }) {
+export default async function AllToolsPage({ params, searchParams }: { params: Promise<{ lang: Locale }>; searchParams?: Promise<{ category?: string; pricing?: string; sort?: string; featured?: string }> }) {
   const { lang } = await params;
   const query = await searchParams;
   const dictionary = getDictionary(lang);
@@ -58,6 +62,7 @@ export default async function AllToolsPage({ params, searchParams }: { params: P
 
   const selectedCategory = query?.category || 'all';
   const selectedPricing = (query?.pricing === 'free' || query?.pricing === 'freemium' || query?.pricing === 'paid' ? query.pricing : 'all') as PricingFilter;
+  const selectedFeatured = (query?.featured === 'featured' || query?.featured === 'not_featured' ? query.featured : 'all') as FeaturedFilter;
   const selectedSort = (query?.sort === 'rating' || query?.sort === 'reviewCount' || query?.sort === 'nameAsc' || query?.sort === 'nameDesc' ? query.sort : 'default') as SortOption;
 
   let filteredServices = [...allServices];
@@ -66,6 +71,9 @@ export default async function AllToolsPage({ params, searchParams }: { params: P
   }
   if (selectedPricing !== 'all') {
     filteredServices = filteredServices.filter((service) => service.pricing === selectedPricing);
+  }
+  if (selectedFeatured !== 'all') {
+    filteredServices = filteredServices.filter((service) => (selectedFeatured === 'featured' ? service.featured : !service.featured));
   }
 
   if (selectedSort !== 'default') {
@@ -139,6 +147,7 @@ export default async function AllToolsPage({ params, searchParams }: { params: P
           ratings={ratings}
           currentCategory={selectedCategory}
           currentPricing={selectedPricing}
+          currentFeatured={selectedFeatured}
           currentSort={selectedSort}
           currentPage={currentPage}
           totalPages={totalPages}
