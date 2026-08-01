@@ -994,5 +994,14 @@
     "language": [
       "en"
     ]
+  },
+  {
+    "id": "saascity",
+    "url": "https://saascity.io",
+    "category": "marketing",
+    "pricing": "free",
+    "language": [
+      "en"
+    ]
   }
 ]
