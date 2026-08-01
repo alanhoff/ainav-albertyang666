@@ -19,6 +19,46 @@ interface ReviewsData {
   total: number;
 }
 
+type ReviewDictionary = NonNullable<ReturnType<typeof getDictionary>['reviews']>;
+
+function buildReviewTextContent(
+  reviewsContent: ReviewDictionary | undefined,
+  reviewSubmitContent: ReviewDictionary['submit'] | undefined,
+  reviewPaginationContent: ReviewDictionary['pagination'] | undefined,
+) {
+  return {
+    loading: reviewsContent?.loading ?? 'Loading reviews...',
+    title: reviewsContent?.title ?? 'Reviews & Ratings',
+    shareTitle: reviewsContent?.shareTitle ?? 'Share Your Experience',
+    ratingLabel: reviewSubmitContent?.button ?? 'Your Rating',
+    titlePlaceholder: reviewSubmitContent?.titlePlaceholder ?? 'Title (Optional)',
+    contentPlaceholder: reviewSubmitContent?.contentPlaceholder ?? 'Your Review',
+    maxLength: reviewSubmitContent?.maxLength ?? 5000,
+    successMessage: reviewSubmitContent?.successMessage ?? '✓ Thank you! Your review will be published after moderation.',
+    submitting: reviewSubmitContent?.submitting ?? 'Submitting...',
+    recentTitle: reviewsContent?.recentTitle ?? 'Recent Reviews',
+    noReviews: reviewsContent?.noReviews ?? 'No reviews yet. Be the first to share your experience!',
+    helpful: reviewsContent?.helpful ?? 'Helpful',
+    notHelpful: reviewsContent?.notHelpful ?? 'Not Helpful',
+    previous: reviewPaginationContent?.previous ?? 'Previous',
+    next: reviewPaginationContent?.next ?? 'Next',
+    alreadyVoted: reviewsContent?.alreadyVoted ?? 'You have already voted on this review',
+    votedHelpful: reviewsContent?.votedHelpful ?? '👍 Thank you for your feedback!',
+    votedUnhelpful: reviewsContent?.votedUnhelpful ?? '👎 Thank you for your feedback!',
+    voteError: reviewsContent?.voteError ?? 'Failed to record your vote. Please try again.',
+    basedOn: (count: number) => (
+      reviewsContent?.basedOn
+        ? reviewsContent.basedOn(count)
+        : `Based on ${count} review${count !== 1 ? 's' : ''}`
+    ),
+    pageInfo: (page: number, totalPages: number) => (
+      reviewPaginationContent?.pageInfo
+        ? reviewPaginationContent.pageInfo(page, totalPages)
+        : `Page ${page} of ${totalPages}`
+    ),
+  };
+}
+
 const DEFAULT_RATING_LABELS: Record<number, string> = {
   1: 'Poor',
   2: 'Fair',
@@ -49,7 +89,13 @@ export default function ReviewSection({ serviceId, locale }: ReviewSectionProps)
   }, [serviceId, page]);
 
   const dict = getDictionary(locale);
-  const ratingLabels = (dict.reviews?.ratingLabels as Record<number, string>) ?? DEFAULT_RATING_LABELS;
+  const reviewsContent = dict.reviews;
+  const reviewSubmit = reviewsContent?.submit;
+  const reviewPagination = reviewsContent?.pagination;
+  const reviewText = buildReviewTextContent(reviewsContent, reviewSubmit, reviewPagination);
+  const ratingLabels = (reviewsContent?.ratingLabels as Record<number, string> | undefined) ?? DEFAULT_RATING_LABELS;
+  const currentRatingValue = hoverRating || formRating;
+  const currentRatingLabel = ratingLabels[currentRatingValue] ?? '';
 
   const fetchReviews = async () => {
     try {
@@ -159,16 +205,16 @@ export default function ReviewSection({ serviceId, locale }: ReviewSectionProps)
       if (!response.ok) {
         // 如果已经投过票，显示提示但不报错
         if (response.status === 403) {
-          toast.warning(dict.reviews?.alreadyVoted ?? 'You have already voted on this review');
+          toast.warning(reviewText.alreadyVoted);
           return;
         }
         throw new Error(result.error || 'Failed to vote');
       }
 
       // 显示成功提示
-      const successMsg = voteType === 'helpful' 
-        ? (dict.reviews?.votedHelpful ?? '👍 Thank you for your feedback!')
-        : (dict.reviews?.votedUnhelpful ?? '👎 Thank you for your feedback!');
+      const successMsg = voteType === 'helpful'
+        ? reviewText.votedHelpful
+        : reviewText.votedUnhelpful;
       toast.success(successMsg, 2000);
 
       // 更新本地状态
@@ -188,7 +234,7 @@ export default function ReviewSection({ serviceId, locale }: ReviewSectionProps)
       }
     } catch (error) {
       console.error('Vote error:', error);
-      toast.error(dict.reviews?.voteError ?? 'Failed to record your vote. Please try again.');
+      toast.error(reviewText.voteError);
     } finally {
       setVotingReviewId(null);
     }
@@ -197,14 +243,14 @@ export default function ReviewSection({ serviceId, locale }: ReviewSectionProps)
   if (loading && !data) {
     return (
       <div className="mt-8 p-8 text-center text-gray-600 dark:text-gray-400">
-        {dict.reviews?.loading ?? 'Loading reviews...'}
+        {reviewText.loading}
       </div>
     );
   }
 
   return (
     <div className="mt-8 border-t pt-8 space-y-8">
-      <h2 className="text-2xl font-bold">{dict.reviews?.title ?? 'Reviews & Ratings'}</h2>
+      <h2 className="text-2xl font-bold">{reviewText.title}</h2>
 
       {/* 评分摘要 */}
       {data?.rating && (
@@ -218,7 +264,7 @@ export default function ReviewSection({ serviceId, locale }: ReviewSectionProps)
                 {renderStars(data.rating.average_score)}
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                {dict.reviews?.basedOn ? dict.reviews.basedOn(data.rating.review_count) : `Based on ${data.rating.review_count} review${data.rating.review_count !== 1 ? 's' : ''}`}
+                {reviewText.basedOn(data.rating.review_count)}
               </div>
             </div>
           </div>
@@ -227,10 +273,10 @@ export default function ReviewSection({ serviceId, locale }: ReviewSectionProps)
 
       {/* 提交评论表单 */}
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-        <h3 className="text-lg font-semibold mb-4">{dict.reviews?.shareTitle ?? 'Share Your Experience'}</h3>
+        <h3 className="text-lg font-semibold mb-4">{reviewText.shareTitle}</h3>
         <form onSubmit={handleSubmitReview} className="space-y-4">
           <div>
-              <label className="block mb-2 font-medium text-sm">{dict.reviews?.submit?.button ? dict.reviews.submit.button : 'Your Rating'}</label>
+              <label className="block mb-2 font-medium text-sm">{reviewText.ratingLabel}</label>
             <div className="flex items-center gap-1">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
@@ -253,37 +299,37 @@ export default function ReviewSection({ serviceId, locale }: ReviewSectionProps)
                   </span>
                 </button>
               ))}
-                <span className="ml-3 text-sm text-gray-600 dark:text-gray-400">
-                {ratingLabels[hoverRating || formRating] ?? DEFAULT_RATING_LABELS[hoverRating || formRating]}
+              <span className="ml-3 text-sm text-gray-600 dark:text-gray-400">
+                {currentRatingLabel}
               </span>
             </div>
           </div>
 
           <div>
-            <label className="block mb-2 font-medium text-sm">{dict.reviews?.submit?.titlePlaceholder ?? 'Title (Optional)'}</label>
+            <label className="block mb-2 font-medium text-sm">{reviewText.titlePlaceholder}</label>
             <input
               type="text"
               value={formTitle}
               onChange={(e) => setFormTitle(e.target.value)}
               maxLength={100}
-              placeholder={dict.reviews?.submit?.titlePlaceholder ?? 'Summary of your experience'}
+              placeholder={reviewText.titlePlaceholder}
               className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 dark:bg-gray-700 dark:text-white"
             />
           </div>
 
           <div>
-            <label className="block mb-2 font-medium text-sm">{dict.reviews?.submit?.contentPlaceholder ?? 'Your Review'}</label>
+            <label className="block mb-2 font-medium text-sm">{reviewText.contentPlaceholder}</label>
             <textarea
               value={formContent}
               onChange={(e) => setFormContent(e.target.value)}
               rows={4}
               minLength={10}
               maxLength={5000}
-              placeholder={dict.reviews?.submit?.contentPlaceholder ?? 'Share your thoughts about this AI tool...'}
+              placeholder={reviewText.contentPlaceholder}
               className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 dark:bg-gray-700 dark:text-white resize-none"
             />
             <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              {formContent.length}/{dict.reviews?.submit?.maxLength ?? 5000} characters
+              {formContent.length}/{reviewText.maxLength} characters
             </div>
           </div>
 
@@ -294,7 +340,7 @@ export default function ReviewSection({ serviceId, locale }: ReviewSectionProps)
           )}
           {formSuccess && (
             <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 rounded text-sm">
-              {dict.reviews?.submit?.successMessage ?? '✓ Thank you! Your review will be published after moderation.'}
+              {reviewText.successMessage}
             </div>
           )}
 
@@ -304,18 +350,18 @@ export default function ReviewSection({ serviceId, locale }: ReviewSectionProps)
             className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-3 px-6 rounded transition-colors disabled:cursor-not-allowed"
           >
             {submitting
-              ? (dict.reviews?.submit?.submitting ?? 'Submitting...')
-              : (dict.reviews?.submit?.button ?? 'Submit Review')}
+              ? (reviewText.submitting)
+              : (reviewText.ratingLabel)}
           </button>
         </form>
       </div>
 
       {/* 评论列表 */}
       <div>
-        <h3 className="font-semibold text-lg mb-4">{dict.reviews?.recentTitle ?? 'Recent Reviews'}</h3>
+        <h3 className="font-semibold text-lg mb-4">{reviewText.recentTitle}</h3>
         {!data?.reviews || data.reviews.length === 0 ? (
           <p className="text-gray-500 dark:text-gray-400 text-center py-8">
-            {dict.reviews?.noReviews ?? 'No reviews yet. Be the first to share your experience!'}
+            {reviewText.noReviews}
           </p>
         ) : (
           <div className="space-y-4">
@@ -350,14 +396,14 @@ export default function ReviewSection({ serviceId, locale }: ReviewSectionProps)
                     disabled={votingReviewId === review.id}
                     className="hover:text-green-600 dark:hover:text-green-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                   >
-                    👍 {dict.reviews?.helpful ?? 'Helpful'} ({review.helpful_count})
+                    👍 {reviewText.helpful} ({review.helpful_count})
                   </button>
                   <button
                     onClick={() => handleVote(review.id, 'unhelpful')}
                     disabled={votingReviewId === review.id}
                     className="hover:text-red-600 dark:hover:text-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                   >
-                    👎 {dict.reviews?.notHelpful ?? 'Not Helpful'} ({review.unhelpful_count})
+                    👎 {reviewText.notHelpful} ({review.unhelpful_count})
                   </button>
                 </div>
               </div>
@@ -371,23 +417,21 @@ export default function ReviewSection({ serviceId, locale }: ReviewSectionProps)
             <button
               onClick={() => setPage(Math.max(1, page - 1))}
               disabled={page === 1}
-              aria-label={dict.reviews?.pagination?.previous ?? 'Previous'}
+              aria-label={reviewText.previous}
               className="px-4 py-2 border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700"
             >
-              {dict.reviews?.pagination?.previous ?? 'Previous'}
+              {reviewText.previous}
             </button>
             <span aria-live="polite" className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">
-              {dict.reviews?.pagination?.pageInfo
-                ? dict.reviews.pagination.pageInfo(page, Math.ceil(data.total / 10))
-                : `Page ${page} of ${Math.ceil(data.total / 10)}`}
+              {reviewText.pageInfo(page, Math.ceil(data.total / 10))}
             </span>
             <button
               onClick={() => setPage(page + 1)}
               disabled={page >= Math.ceil(data.total / 10)}
-              aria-label={dict.reviews?.pagination?.next ?? 'Next'}
+              aria-label={reviewText.next}
               className="px-4 py-2 border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700"
             >
-              {dict.reviews?.pagination?.next ?? 'Next'}
+              {reviewText.next}
             </button>
           </div>
         )}

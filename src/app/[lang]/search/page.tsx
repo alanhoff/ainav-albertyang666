@@ -5,6 +5,8 @@ import { generateSEO } from '@/lib/seo';
 import { getDictionary, Locale, locales } from '@/lib/i18n';
 import { getAllAIServices, getAllCategories } from '@/lib/data';
 
+export const revalidate = 3600;
+
 export function generateStaticParams() {
   return locales.map((lang) => ({ lang }));
 }

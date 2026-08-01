@@ -47,6 +47,9 @@ const koTranslations = {
     placeholder: 'AI 도구 검색...',
     button: '검색',
     filters: {
+      panelTitle: '필터 및 정렬',
+      allTools: '모든 도구',
+      clear: '지우기',
       category: '카테고리별 필터',
       allCategories: '전체 카테고리',
       pricing: '가격별 필터',

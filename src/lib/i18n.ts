@@ -72,6 +72,9 @@ export type Dictionary = {
     placeholder: string;
     button: string;
     filters: {
+      panelTitle: string;
+      allTools: string;
+      clear: string;
       category: string;
       allCategories: string;
       pricing: string;

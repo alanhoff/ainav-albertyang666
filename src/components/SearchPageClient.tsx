@@ -23,7 +23,7 @@ function SearchResults({ locale, allServices, categories }: SearchResultsProps) 
   const query = searchParams.get('q') || '';
   
   // State management
-  const [ratingsMap, setRatingsMap] = useState<Map<string, RatingData>>(new Map());
+  const [ratingsMap, setRatingsMap] = useState<Record<string, RatingData>>({});
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [sortBy, setSortBy] = useState<SortOption>('relevance');
   
@@ -35,11 +35,11 @@ function SearchResults({ locale, allServices, categories }: SearchResultsProps) 
         .select('service_id, average_score, review_count');
       
       if (data) {
-        const map = new Map<string, RatingData>();
+        const nextRatings: Record<string, RatingData> = {};
         data.forEach((r) => {
-          map.set(r.service_id, { average_score: r.average_score, review_count: r.review_count });
+          nextRatings[r.service_id] = { average_score: r.average_score, review_count: r.review_count };
         });
-        setRatingsMap(map);
+        setRatingsMap(nextRatings);
       }
     }
     fetchRatings();
@@ -63,8 +63,8 @@ function SearchResults({ locale, allServices, categories }: SearchResultsProps) 
     
     // Sort results
     results.sort((a, b) => {
-      const ratingA = ratingsMap.get(a.id);
-      const ratingB = ratingsMap.get(b.id);
+      const ratingA = ratingsMap[a.id];
+      const ratingB = ratingsMap[b.id];
       
       switch (sortBy) {
         case 'rating':
@@ -156,7 +156,7 @@ function SearchResults({ locale, allServices, categories }: SearchResultsProps) 
                 key={service.id} 
                 service={service} 
                 locale={locale}
-                rating={ratingsMap.get(service.id) || null}
+                rating={ratingsMap[service.id] || null}
               />
             ))}
           </div>

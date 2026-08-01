@@ -47,6 +47,9 @@ const jaTranslations = {
     placeholder: 'AIツールを検索...',
     button: '検索',
     filters: {
+      panelTitle: '絞り込みと並び替え',
+      allTools: 'すべてのツール',
+      clear: 'クリア',
       category: 'カテゴリーで絞り込む',
       allCategories: '全カテゴリー',
       pricing: '料金で絞り込む',

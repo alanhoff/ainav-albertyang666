@@ -64,6 +64,9 @@ const zhTranslations = {
     placeholder: "搜索 AI 工具...",
     button: "搜索",
     filters: {
+      panelTitle: "筛选与排序",
+      allTools: "全部工具",
+      clear: "清除",
       category: "分类筛选",
       allCategories: "全部分类",
       pricing: "价格筛选",

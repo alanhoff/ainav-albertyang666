@@ -1,6 +1,10 @@
+import dynamic from 'next/dynamic';
 import SearchBar from '@/components/SearchBar';
-import AIServiceCard from '@/components/AIServiceCard';
 import CategoryCard from '@/components/CategoryCard';
+
+const AIServiceCard = dynamic(() => import('@/components/AIServiceCard'), {
+  loading: () => <div className="h-64 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800/60" />,
+});
 import { getAllAIServices, getAllCategories, getFeaturedAIServices, getAIServicesByCategory } from '@/lib/data';
 import { getDictionary, Locale, locales } from '@/lib/i18n';
 import { generateSEO, generateWebsiteSchema, generateOrganizationSchema } from '@/lib/seo';
@@ -9,6 +13,8 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Rocket, Wrench, Folder, Star } from 'lucide-react';
 import Link from 'next/link';
+
+export const revalidate = 3600;
 
 export function generateStaticParams() {
   return locales.map((lang) => ({ lang }));
@@ -175,7 +181,7 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
                 key={service.id} 
                 service={service} 
                 locale={lang} 
-                rating={ratingsMap.get(service.id) || null}
+                rating={ratingsMap[service.id] || null}
             />
             ))}
           </div>

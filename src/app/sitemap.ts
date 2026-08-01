@@ -1,5 +1,6 @@
 import { getAllCategories, getAllAIServices } from '@/lib/data';
 import { locales } from '@/lib/i18n';
+import { TOOLS_PAGE_SIZE } from '@/lib/constants';
 
 // 使用 tags 缓存，revalidateTag('tools') 时自动更新 sitemap
 export const dynamic = 'force-dynamic';
@@ -70,6 +71,21 @@ export default async function sitemap() {
     },
   ]);
 
+  // 工具目录分页页面（路径式分页 /tools/page/{n}）
+  const totalToolsPages = Math.ceil(services.length / TOOLS_PAGE_SIZE);
+  const toolsPageUrls = locales.flatMap((locale) =>
+    Array.from({ length: totalToolsPages - 1 }, (_, index) => {
+      const page = index + 2;
+      return {
+        url: `${baseUrl}/${locale}/tools/page/${page}`,
+        lastModified: new Date(),
+        changeFrequency: 'daily' as const,
+        priority: 0.7,
+        alternates: langAlternates(`/tools/page/${page}`),
+      };
+    })
+  );
+
   return [
     {
       url: baseUrl,
@@ -78,6 +94,7 @@ export default async function sitemap() {
       priority: 0.8,
     },
     ...localePages,
+    ...toolsPageUrls,
     ...categoryUrls,
     ...serviceUrls,
   ];

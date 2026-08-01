@@ -1,6 +1,6 @@
 <div align="center">
   <h1>🚀 AI Directory - ainav.space</h1>
-  <p><strong>Curated AI Tools Directory | 518+ AI Services | 16 Categories | 5 Languages</strong></p>
+  <p><strong>Curated AI Tools Directory | 523+ AI Services | 16 Categories | 5 Languages</strong></p>
   
   <p>
     <a href="https://ainav.space">🌐 Live Demo</a> •
@@ -35,7 +35,7 @@
 
 ### 🎯 Why AI Directory?
 
-- 🎨 **Curated Collection** - 518+ handpicked AI tools across 16 categories
+- 🎨 **Curated Collection** - 523+ handpicked AI tools across 16 categories
 - 🔍 **Smart Search** - Quickly find the AI tools you need
 - 🏷️ **Clear Categories** - Chat, Image, Video, Coding, Music and more
 - 🌍 **Multi-language** - Supports English, 中文, 日本語, 한국어, Français
@@ -49,7 +49,7 @@
 
 | Item           | Count |
 | -------------- | ----- |
-| Total AI Tools | 518+  |
+| Total AI Tools | 523+  |
 | Categories     | 16    |
 | Languages      | 5     |
 | Featured Tools | 20+   |
@@ -70,6 +70,8 @@
 - ✅ **Smart Search** - Search by name, description, and tags
 - ✅ **Category Browsing** - 16 categories for quick navigation
 - ✅ **Advanced Filtering** - Filter all tools by category/pricing, sort by rating/reviews/name
+- ✅ **SEO-Friendly Pagination** - Path-based pagination (`/tools/page/2`) for better crawling and clean URLs
+- ✅ **Responsive Pagination** - Adaptive page-number range based on screen width
 - ✅ **Multi-language** - Full translations in 5 languages
 - ✅ **Mobile Optimized** - Responsive navigation, icon-based UI
 - ✅ **Tool Submission** - Online form submission with admin review

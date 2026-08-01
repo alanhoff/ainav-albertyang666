@@ -1,8 +1,12 @@
 "use client";
 
+import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
-import LanguageSwitcher from './LanguageSwitcher';
 import { Locale } from '@/lib/i18n';
+
+const LanguageSwitcher = dynamic(() => import('./LanguageSwitcher'), {
+  ssr: false,
+});
 
 export default function LanguageSwitcherWrapper({ locale }: { locale: Locale }) {
   return (

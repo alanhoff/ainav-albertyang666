@@ -1,5 +1,6 @@
 // src/lib/supabase.ts
 import { createClient } from '@supabase/supabase-js';
+import { unstable_cache } from 'next/cache';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 // 支持新版 Supabase 的 PUBLISHABLE_DEFAULT_KEY 或旧版的 ANON_KEY
@@ -20,42 +21,44 @@ export const getSupabaseAdmin = () => {
   return createClient(supabaseUrl!, serviceRoleKey);
 };
 
-// 获取所有服务的评分数据
-export async function getAllRatings(): Promise<Map<string, { average_score: number; review_count: number }>> {
-  const { data, error } = await supabase
-    .from('ratings')
-    .select('service_id, average_score, review_count');
+const getCachedRatings = unstable_cache(
+  async () => {
+    const { data, error } = await supabase
+      .from('ratings')
+      .select('service_id, average_score, review_count');
 
-  const ratingsMap = new Map<string, { average_score: number; review_count: number }>();
-  
-  if (!error && data) {
-    data.forEach((rating) => {
-      ratingsMap.set(rating.service_id, {
-        average_score: Number(rating.average_score),
-        review_count: Number(rating.review_count),
+    const ratingsMap: Record<string, { average_score: number; review_count: number }> = {};
+
+    if (!error && data) {
+      data.forEach((rating) => {
+        ratingsMap[rating.service_id] = {
+          average_score: Number(rating.average_score),
+          review_count: Number(rating.review_count),
+        };
       });
-    });
-  }
-  
-  return ratingsMap;
+    }
+
+    return ratingsMap;
+  },
+  ['ratings'],
+  { tags: ['tools'], revalidate: 3600 }
+);
+
+// 获取所有服务的评分数据
+export async function getAllRatings(): Promise<Record<string, { average_score: number; review_count: number }>> {
+  return getCachedRatings();
 }
 
 // 获取单个服务的评分
 export async function getServiceRating(serviceId: string): Promise<{ average_score: number; review_count: number } | null> {
-  const { data, error } = await supabase
-    .from('ratings')
-    .select('average_score, review_count')
-    .eq('service_id', serviceId)
-    .maybeSingle();  // 使用 maybeSingle 代替 single，允许返回 null
+  const ratingsMap = await getCachedRatings();
+  const record = ratingsMap[serviceId];
 
-  if (error || !data) {
+  if (!record) {
     return null;
   }
-  
-  return {
-    average_score: data.average_score,
-    review_count: data.review_count,
-  };
+
+  return record;
 }
 
 // 获取工具的 AI 生成详情内容（使用场景/快速开始），无则返回 null
@@ -63,23 +66,31 @@ export async function getToolContent(
   serviceId: string,
   locale: string
 ): Promise<{ useCases: string[]; quickStart: string[] } | null> {
-  const { data, error } = await supabase
-    .from('tool_content')
-    .select('content')
-    .eq('service_id', serviceId)
-    .maybeSingle();
+  const getCachedToolContent = unstable_cache(
+    async (id: string, targetLocale: string) => {
+      const { data, error } = await supabase
+        .from('tool_content')
+        .select('content')
+        .eq('service_id', id)
+        .maybeSingle();
 
-  if (error || !data?.content) {
-    return null;
-  }
+      if (error || !data?.content) {
+        return null;
+      }
 
-  const localeContent = (data.content as Record<string, { useCases?: string[]; quickStart?: string[] }>)[locale];
-  if (!localeContent?.useCases?.length || !localeContent?.quickStart?.length) {
-    return null;
-  }
+      const localeContent = (data.content as Record<string, { useCases?: string[]; quickStart?: string[] }>)[targetLocale];
+      if (!localeContent?.useCases?.length || !localeContent?.quickStart?.length) {
+        return null;
+      }
 
-  return {
-    useCases: localeContent.useCases,
-    quickStart: localeContent.quickStart,
-  };
+      return {
+        useCases: localeContent.useCases,
+        quickStart: localeContent.quickStart,
+      };
+    },
+    ['tool-content'],
+    { tags: ['tools'], revalidate: 3600 }
+  );
+
+  return getCachedToolContent(serviceId, locale);
 }

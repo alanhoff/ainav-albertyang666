@@ -63,7 +63,7 @@ const labels: Record<Locale, {
 
 export default function BookmarksPageClient({ locale, allServices }: { locale: Locale; allServices: AIService[] }) {
   const { bookmarkedIds } = useBookmark();
-  const [ratingsMap, setRatingsMap] = useState<Map<string, RatingData>>(new Map());
+  const [ratingsMap, setRatingsMap] = useState<Record<string, RatingData>>({});
   const t = labels[locale];
   
   // Fetch ratings data
@@ -74,11 +74,11 @@ export default function BookmarksPageClient({ locale, allServices }: { locale: L
         .select('service_id, average_score, review_count');
       
       if (data) {
-        const map = new Map<string, RatingData>();
+        const nextRatings: Record<string, RatingData> = {};
         data.forEach((r) => {
-          map.set(r.service_id, { average_score: r.average_score, review_count: r.review_count });
+          nextRatings[r.service_id] = { average_score: r.average_score, review_count: r.review_count };
         });
-        setRatingsMap(map);
+        setRatingsMap(nextRatings);
       }
     }
     fetchRatings();
@@ -117,7 +117,7 @@ export default function BookmarksPageClient({ locale, allServices }: { locale: L
                 key={service.id} 
                 service={service} 
                 locale={locale}
-                rating={ratingsMap.get(service.id) || null}
+                rating={ratingsMap[service.id] || null}
               />
             ))}
           </div>

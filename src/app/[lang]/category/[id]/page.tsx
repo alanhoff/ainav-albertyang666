@@ -6,6 +6,8 @@ import { getAllRatings } from '@/lib/supabase';
 import type { Metadata } from 'next';
 import { getDictionary, Locale, locales } from '@/lib/i18n';
 
+export const revalidate = 3600;
+
 interface CategoryPageProps {
   params: Promise<{ lang: Locale; id: string }>;
 }
@@ -123,7 +125,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
               key={service.id} 
               service={service} 
               locale={lang} 
-              rating={ratingsMap.get(service.id) || null}
+              rating={ratingsMap[service.id] || null}
             />
           ))}
         </div>

@@ -58,6 +58,8 @@ export async function generateMetadata({ params }: ServicePageProps): Promise<Me
   });
 }
 
+export const revalidate = 3600;
+
 export async function generateStaticParams() {
   const services = await getAllAIServices('zh');
   return locales.flatMap((lang) =>
@@ -338,7 +340,7 @@ export default async function ServicePage({ params }: ServicePageProps) {
                 key={related.id}
                 service={related}
                 locale={lang}
-                rating={ratingsMap.get(related.id) || null}
+                rating={ratingsMap[related.id] || null}
               />
             ))}
           </div>

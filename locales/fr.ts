@@ -49,6 +49,9 @@ const frTranslations = {
     placeholder: 'Rechercher des outils IA...',
     button: 'Rechercher',
     filters: {
+      panelTitle: 'Filtres',
+      allTools: 'Tous les outils',
+      clear: 'Effacer',
       category: 'Filtrer par catégorie',
       allCategories: 'Toutes les catégories',
       pricing: 'Filtrer par prix',

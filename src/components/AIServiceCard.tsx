@@ -1,10 +1,21 @@
+'use client';
+
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { AIService } from '@/types';
 import type { Locale } from '@/lib/i18n';
 import { getPricingLabel } from '@/lib/i18n';
-import CompareButton from './CompareButton';
-import BookmarkButton from './BookmarkButton';
 import { Star, StarHalf } from 'lucide-react';
+
+const BookmarkButton = dynamic(() => import('./BookmarkButton'), {
+  ssr: false,
+  loading: () => <div className="h-9 w-9 rounded-lg bg-gray-100 dark:bg-gray-700/50" />,
+});
+
+const CompareButton = dynamic(() => import('./CompareButton'), {
+  ssr: false,
+  loading: () => <div className="h-8 w-24 rounded-lg bg-gray-100 dark:bg-gray-700/50" />,
+});
 
 interface AIServiceCardProps {
   service: AIService;
@@ -52,6 +63,7 @@ export default function AIServiceCard({ service, locale, rating }: AIServiceCard
   return (
     <Link
       href={`/${locale}/service/${service.id}`}
+      prefetch={false}
       className="group block h-full p-6 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 hover:border-blue-100 dark:hover:border-gray-600 hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 relative overflow-hidden"
     >
       {/* Decorative gradient blob */}

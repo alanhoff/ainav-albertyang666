@@ -64,6 +64,9 @@ const enTranslations = {
     placeholder: "Search AI tools...",
     button: "Search",
     filters: {
+      panelTitle: "Filters",
+      allTools: "All tools",
+      clear: "Clear",
       category: "Filter by Category",
       allCategories: "All Categories",
       pricing: "Filter by Pricing",

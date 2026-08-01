@@ -85,7 +85,7 @@ function dbRowToService(row: Record<string, unknown>, locale: Locale): AIService
   };
 }
 
-// Fetch tools from DB and merge with JSON baseline (inner function wrapped by unstable_cache)
+// Fetch tools from DB first and only use static JSON as fallback for missing entries.
 async function fetchAndMergeTools(locale: string): Promise<AIService[]> {
   const jsonTools = getToolsFromJSON(locale as Locale);
 
@@ -107,25 +107,17 @@ async function fetchAndMergeTools(locale: string): Promise<AIService[]> {
       return jsonTools;
     }
 
-    // Existing JSON tools: if the same ID exists in DB, respect DB status.
-    // - If DB row exists and status !== 'active' -> hide the tool (exclude it).
-    // - If DB row exists and status === 'active' -> use DB data to override JSON.
-    const mergedJsonTools = jsonTools
-      .map(service => {
-        const dbRow = dbTools.find(r => r.id === service.id);
-        if (!dbRow) return service;
-        // If DB row is present but not active, remove from final list
-        if ((dbRow.status as string) && (dbRow.status as string) !== 'active') return null;
-        return dbRowToService(dbRow as Record<string, unknown>, locale as Locale);
+    const activeDbTools = dbTools
+      .filter((row) => {
+        const status = row.status as string | undefined;
+        return !status || status === 'active';
       })
-      .filter(Boolean) as AIService[];
+      .map((row) => dbRowToService(row as Record<string, unknown>, locale as Locale));
 
-    // Tools that exist only in DB (newly approved submissions, not in JSON) — only include active ones
-    const newDbTools = dbTools
-      .filter(r => !aiServicesBaseData.some(b => b.id === r.id) && ((r.status as string) === 'active' || r.status == null))
-      .map(r => dbRowToService(r as Record<string, unknown>, locale as Locale));
+    const dbIds = new Set(activeDbTools.map((service) => service.id));
+    const fallbackJsonTools = jsonTools.filter((service) => !dbIds.has(service.id));
 
-    return [...mergedJsonTools, ...newDbTools];
+    return [...activeDbTools, ...fallbackJsonTools];
   } catch {
     return jsonTools;
   }
@@ -135,7 +127,7 @@ async function fetchAndMergeTools(locale: string): Promise<AIService[]> {
 const getCachedTools = unstable_cache(
   fetchAndMergeTools,
   ['tools'],
-  { tags: ['tools'] }
+  { tags: ['tools'], revalidate: 3600 }
 );
 
 // ============================================================
