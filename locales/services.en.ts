@@ -484,6 +484,11 @@ const enServices = {
     description: 'Smart productivity tool for meeting notes, task management, and team collaboration with auto-generated meeting summaries.',
     tags: ["Meeting Notes","Task Management","Collaboration"],
   },
+  'saascity': {
+    name: 'SaaSCity',
+    description: 'Gamified SaaS and AI product directory where every listing becomes a building on a live isometric city map.',
+    tags: ["Directory","Launch","SaaS"],
+  },
 };
 
 export default enServices;
