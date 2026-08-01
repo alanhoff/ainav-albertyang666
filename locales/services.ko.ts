@@ -144,6 +144,11 @@ const koServices = {
   'coderplan': { name: 'CoderPlan', description: 'GPT-4o, Claude, Gemini 등 100개 이상의 AI 모델에 통합 접근할 수 있는 저렴한 OpenAI 호환 API 릴레이 서비스입니다.', tags: ["API","OpenAI","릴레이","AI 코딩","개발자 도구"] },
   'lockedin-ai': { name: 'LockedIn AI', description: '면접 준비, 이력서 최적화, 커리어 계획을 지원하는 AI 커리어 개발 도우미입니다.', tags: ["면접","커리어","이력서"] },
   'medally': { name: 'Medally', description: '회의 노트, 작업 관리, 팀 협업을 위한 스마트 생산성 도구로 회의 요약을 자동 생성합니다.', tags: ["회의 노트","작업 관리","협업"] },
+  'saascity': {
+    name: 'SaaSCity',
+    description: '등록된 모든 제품이 아이소메트릭 도시 지도의 건물이 되는 게임형 SaaS·AI 디렉터리입니다.',
+    tags: ["디렉터리","론칭","SaaS"],
+  },
 };
 
 export default koServices;
