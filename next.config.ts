@@ -5,8 +5,13 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   // 注意：移除 output: 'export' 以支持 API 路由
   // Vercel 会自动优化静态页面
+  compress: true,
+  poweredByHeader: false,
   images: {
     unoptimized: true,
+  },
+  experimental: {
+    optimizePackageImports: ['lucide-react'],
   },
   // 禁用 trailingSlash，因为它会导致 NextAuth API 路由出错
   // NextAuth 需要 /api/auth/session 而不是 /api/auth/session/

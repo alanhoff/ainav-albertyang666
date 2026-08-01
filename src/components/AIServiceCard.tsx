@@ -90,7 +90,7 @@ export default function AIServiceCard({ service, locale, rating }: AIServiceCard
         </p>
         
         <div className="flex flex-wrap gap-2 mt-auto pt-4 border-t border-gray-50 dark:border-gray-700/50">
-          {service.tags.map((tag) => (
+          {service.tags.slice(0, 2).map((tag) => (
             <span
               key={tag}
               className="px-2.5 py-1 text-[11px] font-medium bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300 rounded-full border border-gray-100 dark:border-gray-600 transition-colors group-hover:border-gray-200 dark:group-hover:border-gray-500"
@@ -98,6 +98,11 @@ export default function AIServiceCard({ service, locale, rating }: AIServiceCard
               #{tag}
             </span>
           ))}
+          {service.tags.length > 2 && (
+            <span className="px-2.5 py-1 text-[11px] font-medium text-gray-400 dark:text-gray-500 rounded-full border border-transparent">
+              +{service.tags.length - 2}
+            </span>
+          )}
         </div>
       </div>
     </Link>

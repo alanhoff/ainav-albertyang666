@@ -20,7 +20,6 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
   if (!locales.includes(lang as Locale)) {
     notFound();
   }
-  const dictionary = getDictionary(lang as Locale);
 
   // 按语言定制首页 TDK
   const titleMap: Record<Locale, string> = {
@@ -163,9 +162,15 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
               {dictionary.sections.featured}
               <span className="absolute -bottom-2 left-0 w-1/3 h-1 bg-purple-600 rounded-full"></span>
             </h2>
+            <Link
+              href={`/${lang}/tools`}
+              className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              {dictionary.sections.viewAll} →
+            </Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredServices.map((service) => (
+            {featuredServices.slice(0, 6).map((service) => (
               <AIServiceCard 
                 key={service.id} 
                 service={service} 

@@ -9,6 +9,7 @@ import { ToastProvider } from "@/components/ToastProvider";
 const inter = Inter({
   subsets: ["latin"],
   display: "swap",
+  preload: true,
 });
 
 export default function RootLayout({
@@ -19,12 +20,19 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Google Analytics */}
+        {/* 提前建立关键第三方域连接，减少 DNS/TCP/TLS 时间 */}
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
+        <link rel="preconnect" href="https://www.google-analytics.com" />
+        <link rel="preconnect" href="https://static.cloudflareinsights.com" />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        <link rel="dns-prefetch" href="https://www.google-analytics.com" />
+        <link rel="dns-prefetch" href="https://static.cloudflareinsights.com" />
+        {/* Google Analytics - 非关键脚本，懒加载避免阻塞主线程 */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-ZJ134D6S5R"
-          strategy="afterInteractive"
+          strategy="lazyOnload"
         />
-        <Script id="google-analytics" strategy="afterInteractive">
+        <Script id="google-analytics" strategy="lazyOnload">
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}

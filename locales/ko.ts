@@ -20,6 +20,7 @@ const koTranslations = {
   sections: {
     browseCategories: '카테고리 둘러보기',
     featured: '추천 도구',
+    viewAll: '전체 보기',
   },
   newsletter: {
     title: 'AI 혁신 소식 받아보기',

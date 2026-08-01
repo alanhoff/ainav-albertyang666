@@ -20,6 +20,7 @@ const jaTranslations = {
   sections: {
     browseCategories: "カテゴリー一覧",
     featured: "おすすめツール",
+    viewAll: "すべて見る",
   },
   newsletter: {
     title: "AI イノベーションの最新情報を入手",

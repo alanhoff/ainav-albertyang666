@@ -36,6 +36,7 @@ const zhTranslations = {
   sections: {
     browseCategories: "浏览分类",
     featured: "精选推荐",
+    viewAll: "查看全部",
   },
   newsletter: {
     title: "订阅 AI 工具更新",

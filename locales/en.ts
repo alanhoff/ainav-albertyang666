@@ -36,6 +36,7 @@ const enTranslations = {
   sections: {
     browseCategories: "Browse Categories",
     featured: "Featured Picks",
+    viewAll: "View All",
   },
   newsletter: {
     title: "Stay Updated with AI Innovations",
