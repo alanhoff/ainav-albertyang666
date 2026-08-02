@@ -149,6 +149,11 @@ const jaServices = {
     description: 'ゲーム化された SaaS・AI プロダクトディレクトリ。掲載されたサービスはアイソメトリックな街の建物になります。',
     tags: ["ディレクトリ","ローンチ","SaaS"],
   },
+  'rao-edits': {
+    name: 'Rao Edits',
+    description: '画像の生成とビジュアルコンテンツの編集・変換に対応するAI画像生成・写真編集プラットフォーム。',
+    tags: ["画像生成","写真編集","クリエイティブツール"],
+  },
 };
 
 export default jaServices;

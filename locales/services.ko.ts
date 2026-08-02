@@ -149,6 +149,11 @@ const koServices = {
     description: '등록된 모든 제품이 아이소메트릭 도시 지도의 건물이 되는 게임형 SaaS·AI 디렉터리입니다.',
     tags: ["디렉터리","론칭","SaaS"],
   },
+  'rao-edits': {
+    name: 'Rao Edits',
+    description: '시각 콘텐츠를 제작하고 변환할 수 있는 AI 기반 이미지 생성 및 사진 편집 플랫폼입니다.',
+    tags: ["이미지 생성","사진 편집","크리에이티브 도구"],
+  },
 };
 
 export default koServices;

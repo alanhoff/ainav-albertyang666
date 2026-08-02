@@ -149,6 +149,11 @@ const frServices = {
     description: "Annuaire SaaS et IA gamifié où chaque produit référencé devient un bâtiment sur une carte isométrique vivante.",
     tags: ["Annuaire","Lancement","SaaS"],
   },
+  'rao-edits': {
+    name: 'Rao Edits',
+    description: "Plateforme de génération d'images et de retouche photo par IA pour créer et transformer du contenu visuel.",
+    tags: ["Génération d'images","Retouche photo","Outils créatifs"],
+  },
 };
 
 export default frServices;
