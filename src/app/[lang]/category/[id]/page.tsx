@@ -6,7 +6,7 @@ import { getAllRatings } from '@/lib/supabase';
 import type { Metadata } from 'next';
 import { getDictionary, Locale, locales } from '@/lib/i18n';
 
-export const revalidate = 3600;
+export const revalidate = 86400; // 1 day
 
 interface CategoryPageProps {
   params: Promise<{ lang: Locale; id: string }>;

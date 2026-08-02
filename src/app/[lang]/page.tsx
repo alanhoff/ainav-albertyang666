@@ -14,7 +14,7 @@ import { notFound } from 'next/navigation';
 import { Rocket, Wrench, Folder, Star } from 'lucide-react';
 import Link from 'next/link';
 
-export const revalidate = 3600;
+export const revalidate = 86400; // 1 day
 
 export function generateStaticParams() {
   return locales.map((lang) => ({ lang }));

@@ -14,7 +14,7 @@ type SortOption = 'default' | 'rating' | 'reviewCount' | 'nameAsc' | 'nameDesc';
 type PricingFilter = 'all' | 'free' | 'freemium' | 'paid';
 type FeaturedFilter = 'all' | 'featured' | 'not_featured';
 
-export const revalidate = 3600;
+export const revalidate = 86400; // 1 day
 
 export function generateStaticParams() {
   return locales.map((lang) => ({ lang }));

@@ -58,7 +58,7 @@ export async function generateMetadata({ params }: ServicePageProps): Promise<Me
   });
 }
 
-export const revalidate = 3600;
+export const revalidate = 86400; // 1 day
 
 export async function generateStaticParams() {
   const services = await getAllAIServices('zh');
