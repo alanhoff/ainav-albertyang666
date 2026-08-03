@@ -489,6 +489,11 @@ const zhServices = {
     description: '游戏化的 SaaS 与 AI 产品目录，每个收录都会成为等距城市地图上的一栋建筑。',
     tags: ["目录","发布","SaaS"],
   },
+  'rao-edits': {
+    name: 'Rao Edits',
+    description: 'AI 驱动的图像生成与照片编辑平台，用于创建和转换视觉内容。',
+    tags: ["图像生成","照片编辑","创意工具"],
+  },
 };
 
 export default zhServices;

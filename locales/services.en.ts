@@ -489,6 +489,11 @@ const enServices = {
     description: 'Gamified SaaS and AI product directory where every listing becomes a building on a live isometric city map.',
     tags: ["Directory","Launch","SaaS"],
   },
+  'rao-edits': {
+    name: 'Rao Edits',
+    description: 'AI-powered image generation and photo editing platform for creating and transforming visual content.',
+    tags: ["Image Generation","Photo Editing","Creative Tools"],
+  },
 };
 
 export default enServices;
