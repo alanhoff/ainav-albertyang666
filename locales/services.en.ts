@@ -494,6 +494,11 @@ const enServices = {
     description: 'AI-powered image generation and photo editing platform for creating and transforming visual content.',
     tags: ["Image Generation","Photo Editing","Creative Tools"],
   },
+  'agent-qa': {
+    name: 'Agent QA',
+    description: 'AI-assisted browser QA CLI that runs journeys against web apps and captures evidence for review. The CLI package is free; configured AI providers may charge for usage.',
+    tags: ["Browser QA","Testing","CLI"],
+  },
 };
 
 export default enServices;
