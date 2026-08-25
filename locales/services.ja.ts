@@ -154,6 +154,11 @@ const jaServices = {
     description: '画像の生成とビジュアルコンテンツの編集・変換に対応するAI画像生成・写真編集プラットフォーム。',
     tags: ["画像生成","写真編集","クリエイティブツール"],
   },
+  'agent-qa': {
+    name: 'Agent QA',
+    description: 'Webアプリに対してテストジャーニーを実行し、レビュー用の証跡を取得するAI支援ブラウザQA CLI。CLIパッケージは無料ですが、設定したAIプロバイダーの利用料が発生する場合があります。',
+    tags: ["ブラウザテスト","QA","CLI"],
+  },
 };
 
 export default jaServices;

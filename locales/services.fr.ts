@@ -154,6 +154,11 @@ const frServices = {
     description: "Plateforme de génération d'images et de retouche photo par IA pour créer et transformer du contenu visuel.",
     tags: ["Génération d'images","Retouche photo","Outils créatifs"],
   },
+  'agent-qa': {
+    name: 'Agent QA',
+    description: "CLI d'assurance qualité assistée par IA qui exécute des parcours sur des applications web et collecte des preuves à examiner. Le paquet CLI est gratuit, mais les fournisseurs d'IA configurés peuvent facturer l'utilisation.",
+    tags: ["Tests navigateur","Assurance qualité","CLI"],
+  },
 };
 
 export default frServices;

@@ -494,6 +494,11 @@ const zhServices = {
     description: 'AI 驱动的图像生成与照片编辑平台，用于创建和转换视觉内容。',
     tags: ["图像生成","照片编辑","创意工具"],
   },
+  'agent-qa': {
+    name: 'Agent QA',
+    description: 'AI 辅助的浏览器质量保障命令行工具，可针对 Web 应用运行测试旅程并捕获证据供审查。CLI 软件包免费，但配置的 AI 提供商可能收取使用费。',
+    tags: ["浏览器测试","质量保障","命令行"],
+  },
 };
 
 export default zhServices;

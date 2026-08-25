@@ -1014,5 +1014,15 @@
       "en",
       "zh"
     ]
+  },
+  {
+    "id": "agent-qa",
+    "url": "https://github.com/vostride/agent-qa",
+    "category": "coding",
+    "featured": false,
+    "pricing": "free",
+    "language": [
+      "en"
+    ]
   }
 ]
